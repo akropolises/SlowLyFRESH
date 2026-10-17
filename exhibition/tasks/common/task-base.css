@@ -1,0 +1,62 @@
+/* 作業ページの共通スタイル。どの作業も「よくある業務アプリ」程度の素っ気なさにそろえる */
+@font-face {
+  font-family: "Zen Kaku Gothic New";
+  src: url("../../../assets/fonts/ZenKakuGothicNew-Regular.ttf") format("truetype");
+  font-weight: 400;
+}
+
+@font-face {
+  font-family: "Zen Kaku Gothic New";
+  src: url("../../../assets/fonts/ZenKakuGothicNew-Medium.ttf") format("truetype");
+  font-weight: 500;
+}
+
+:root {
+  --text: #23262b;
+  --muted: #6f747c;
+  --line: #e2e4e8;
+  --surface: #ffffff;
+  --surface-sub: #f5f6f8;
+  --accent: #3b6fb6;
+  --accent-soft: #e6eef9;
+  --alert: #c4483b;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  height: 100%;
+  margin: 0;
+}
+
+body {
+  overflow: hidden;
+  font-family: "Zen Kaku Gothic New", "Yu Gothic UI", sans-serif;
+  color: var(--text);
+  background: var(--surface);
+  user-select: none;
+}
+
+button {
+  font: inherit;
+  cursor: pointer;
+}
+
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-thumb {
+  border-radius: 4px;
+  background: #d3d6db;
+}
+
+/* 一時停止中(作業を閉じて予定へ向かったあと)は、全アニメーションを止める */
+.is-paused *,
+.is-paused *::before,
+.is-paused *::after {
+  animation-play-state: paused !important;
+}

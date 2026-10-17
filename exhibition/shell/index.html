@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="utf-8">
+    <title>ゆっくリフレッシュ 体験</title>
+    <link rel="stylesheet" href="shell.css">
+  </head>
+  <body>
+    <!-- 開始画面 -->
+    <section class="launcher" id="launcher">
+      <div class="launcher-inner">
+        <p class="launcher-title">Slowness for Fastitarian</p>
+        <button class="start-button" id="startButton" type="button">はじめる</button>
+      </div>
+    </section>
+
+    <!-- スタッフが作業を切り替えたときだけ、画面の隅に一瞬出る -->
+    <p class="staff-note" id="staffNote"></p>
+
+    <!-- 作業中の画面。ここだけ全画面ではなくウィンドウで表示し、Windowsのタスクバー(と時計)が見える状態にする -->
+    <section class="desktop hidden" id="desktop">
+      <div class="work-window" id="workWindow">
+        <div class="window-bar">
+          <span class="window-title" id="windowTitle"></span>
+          <span class="window-controls"><span>─</span><span>□</span><button class="window-close" id="workClose" type="button" aria-label="閉じる">×</button></span>
+        </div>
+        <p class="work-hint"><span class="demo-tag">デモ用の作業</span><span id="workHint"></span></p>
+        <iframe class="task-frame" id="taskFrame" title="作業"></iframe>
+        <div class="status-bar">
+          <span class="next-event" id="nextEvent"></span>
+        </div>
+      </div>
+
+      <div class="toasts" id="toasts"></div>
+
+      <!-- ゆっくリフレッシュから戻ったあとに届く、次の予定のリマインド -->
+      <div class="meeting-reminder hidden" id="meetingReminder">
+        <strong id="meetingReminderText"></strong>
+        <button class="meeting-reminder-button" id="meetingReminderButton" type="button">作業を閉じて向かう</button>
+      </div>
+
+    </section>
+
+    <!-- 体験の終わり -->
+    <section class="end-card hidden" id="endCard">
+      <h2 id="endCardTitle"></h2>
+      <p>体験はここまでです。ありがとうございました</p>
+    </section>
+
+    <script src="../config.js"></script>
+    <script src="../tasks/registry.js"></script>
+    <script src="../tasks/common/phrases.js"></script>
+    <script src="shell.js"></script>
+  </body>
+</html>

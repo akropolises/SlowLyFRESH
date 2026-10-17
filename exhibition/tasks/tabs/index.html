@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="utf-8">
+    <title>タブ</title>
+    <link rel="stylesheet" href="../common/task-base.css">
+    <link rel="stylesheet" href="tabs.css">
+  </head>
+  <body>
+    <div class="browser">
+      <div class="tab-strip">
+        <div class="tab pinned active" id="todoTab"><span class="favicon" style="--fav:#3b6fb6"></span><span class="tab-title">ToDo</span></div>
+        <div class="tabs" id="tabs"></div>
+        <span class="tab-overflow" id="tabOverflow"></span>
+      </div>
+
+      <div class="toolbar">
+        <span class="nav">‹</span><span class="nav">›</span><span class="nav">⟳</span>
+        <span class="address" id="address"></span>
+      </div>
+
+      <div class="bookmarks" id="bookmarks"></div>
+
+      <main class="page">
+        <!-- ToDoのタブ -->
+        <section class="todo-page" id="todoPage">
+          <header class="todo-header">
+            <strong>今日のToDo</strong>
+            <span class="todo-count">未完了 <b id="todoCount">0</b>件</span>
+          </header>
+          <ul class="todo-list" id="todoList"></ul>
+        </section>
+
+        <!-- ToDoから開いたタブ。1つのボタンで片づく -->
+        <section class="work-page hidden" id="workPage">
+          <p class="work-breadcrumb" id="workBreadcrumb"></p>
+          <h2 id="workTitle"></h2>
+          <div class="work-lines" id="workLines"></div>
+          <button class="work-action" id="workAction" type="button"></button>
+          <p class="work-done hidden" id="workDone">完了しました。ToDoのタブに戻れます</p>
+        </section>
+
+        <!-- 依頼が届いたお知らせ -->
+        <div class="requests" id="requests"></div>
+      </main>
+
+      <div class="download-bar hidden" id="downloadBar">
+        <span class="download-icon">↓</span>
+        <span id="downloadText"></span>
+        <button class="close" id="downloadClose" type="button" aria-label="閉じる">×</button>
+      </div>
+    </div>
+
+    <script src="../common/phrases.js"></script>
+    <script src="../common/task-kit.js"></script>
+    <script src="tabs.js"></script>
+  </body>
+</html>

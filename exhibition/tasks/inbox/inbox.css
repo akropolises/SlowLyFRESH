@@ -1,0 +1,203 @@
+.inbox {
+  display: grid;
+  grid-template-columns: 180px minmax(0, 1fr);
+  height: 100%;
+}
+
+.folders {
+  display: grid;
+  align-content: start;
+  gap: 4px;
+  padding: 18px 12px;
+  background: var(--surface-sub);
+  border-right: 1px solid var(--line);
+}
+
+.compose {
+  margin-bottom: 14px;
+  padding: 10px 14px;
+  border: 0;
+  border-radius: 999px;
+  background: var(--accent-soft);
+  color: var(--accent);
+  text-align: left;
+}
+
+.folder {
+  display: flex;
+  justify-content: space-between;
+  padding: 8px 12px;
+  border-radius: 8px;
+  color: var(--muted);
+  font-size: 15px;
+}
+
+.folder.active {
+  background: #e8ebf0;
+  color: var(--text);
+  font-weight: 500;
+}
+
+.badge {
+  min-width: 28px;
+  padding: 0 8px;
+  border-radius: 999px;
+  background: var(--alert);
+  color: #fff;
+  font-size: 13px;
+  line-height: 22px;
+  text-align: center;
+}
+
+.badge.sub {
+  background: #8b929c;
+}
+
+.badge.bump {
+  animation: bump 320ms ease;
+}
+
+@keyframes bump {
+  50% {
+    transform: scale(1.25);
+  }
+}
+
+.list-pane {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.list-header {
+  display: flex;
+  align-items: baseline;
+  gap: 14px;
+  padding: 16px 24px;
+  border-bottom: 1px solid var(--line);
+  font-size: 18px;
+}
+
+.list-meta {
+  color: var(--muted);
+  font-size: 14px;
+}
+
+.mail-list {
+  flex: 1;
+  margin: 0;
+  padding: 0;
+  overflow-y: auto;
+  list-style: none;
+}
+
+/* 1行目に差出人と時刻、2行目に件名と本文の冒頭。収まらないときは切らずに折り返す */
+.mail {
+  display: grid;
+  grid-template-columns: 10px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 16px;
+  padding: 12px 20px;
+  border-bottom: 1px solid var(--line);
+  font-size: 15px;
+  overflow: hidden;
+  max-height: 160px;
+  transition: max-height 260ms ease, padding 260ms ease, opacity 220ms ease, transform 260ms ease;
+}
+
+.mail.arriving {
+  animation: arrive 700ms ease;
+}
+
+@keyframes arrive {
+  from {
+    background: #fff6d6;
+    max-height: 0;
+    opacity: 0;
+  }
+  40% {
+    background: #fff6d6;
+    max-height: 160px;
+    opacity: 1;
+  }
+}
+
+.mail.leaving {
+  max-height: 0;
+  padding-top: 0;
+  padding-bottom: 0;
+  opacity: 0;
+  transform: translateX(40px);
+}
+
+.mail .dot {
+  align-self: start;
+  width: 8px;
+  height: 8px;
+  margin-top: 7px;
+  border-radius: 50%;
+  background: var(--accent);
+}
+
+.mail.approval .dot {
+  background: #d08a2d;
+}
+
+.mail .body {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+
+.mail .head {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+}
+
+.mail .sender {
+  font-weight: 500;
+}
+
+.mail .time {
+  color: var(--muted);
+  font-size: 13px;
+  white-space: nowrap;
+}
+
+.mail .text {
+  line-height: 1.5;
+}
+
+.mail .preview {
+  margin-left: 12px;
+  color: var(--muted);
+  font-size: 14px;
+}
+
+.mail .actions {
+  display: flex;
+  gap: 8px;
+}
+
+/* 「既読・アーカイブ」と「承認・差し戻し」で列の幅が変わらないよう、ボタンの幅はすべて同じにする */
+.mail .actions button {
+  width: 104px;
+  padding: 7px 0;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #fff;
+  color: var(--text);
+  font-size: 14px;
+  white-space: nowrap;
+}
+
+.mail .actions button.primary {
+  border-color: var(--accent);
+  background: var(--accent);
+  color: #fff;
+}
+
+.mail .actions button:hover {
+  filter: brightness(0.95);
+}

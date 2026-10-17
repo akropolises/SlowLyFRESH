@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="utf-8">
+    <title>入力</title>
+    <link rel="stylesheet" href="../common/task-base.css">
+    <link rel="stylesheet" href="typing.css">
+  </head>
+  <body>
+    <div class="entry">
+      <header class="queue-bar">
+        <span class="queue-label">未入力 <strong id="queueCount">0</strong>件</span>
+        <ol class="queue" id="queue"></ol>
+      </header>
+
+      <section class="prompt" id="prompt">
+        <p class="word" id="word"></p>
+        <p class="kana" id="kana"></p>
+        <p class="romaji" id="romaji"></p>
+      </section>
+
+      <section class="records">
+        <table>
+          <thead>
+            <tr><th>No.</th><th>項目</th><th>状態</th></tr>
+          </thead>
+          <tbody id="records"></tbody>
+        </table>
+      </section>
+    </div>
+
+    <script src="../common/task-kit.js"></script>
+    <script src="words.js"></script>
+    <script src="typing.js"></script>
+  </body>
+</html>

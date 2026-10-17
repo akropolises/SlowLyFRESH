@@ -4,3 +4,4 @@
 *.css text eol=lf
 *.md text eol=lf
 *.ttf binary
+*.bat text eol=crlf

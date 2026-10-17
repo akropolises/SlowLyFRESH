@@ -1,0 +1,23 @@
+// 入力する言葉。業務でよく見る短い言葉にとどめ、ローマ字はひと通りの綴りだけを受け付ける(画面に綴りを出す)
+window.TYPING_WORDS = [
+  { word: "議事録", kana: "ぎじろく", romaji: "gijiroku" },
+  { word: "見積書", kana: "みつもりしょ", romaji: "mitsumorisho" },
+  { word: "日程調整", kana: "にっていちょうせい", romaji: "nitteichousei" },
+  { word: "経費精算", kana: "けいひせいさん", romaji: "keihiseisan" },
+  { word: "至急", kana: "しきゅう", romaji: "shikyuu" },
+  { word: "共有", kana: "きょうゆう", romaji: "kyouyuu" },
+  { word: "承認", kana: "しょうにん", romaji: "shounin" },
+  { word: "提出", kana: "ていしゅつ", romaji: "teishutsu" },
+  { word: "修正", kana: "しゅうせい", romaji: "shuusei" },
+  { word: "会議室", kana: "かいぎしつ", romaji: "kaigishitsu" },
+  { word: "報告書", kana: "ほうこくしょ", romaji: "houkokusho" },
+  { word: "締め切り", kana: "しめきり", romaji: "shimekiri" },
+  { word: "差し替え", kana: "さしかえ", romaji: "sashikae" },
+  { word: "再送", kana: "さいそう", romaji: "saisou" },
+  { word: "返信", kana: "へんしん", romaji: "henshin" },
+  { word: "請求書", kana: "せいきゅうしょ", romaji: "seikyuusho" },
+  { word: "進捗", kana: "しんちょく", romaji: "shinchoku" },
+  { word: "予定表", kana: "よていひょう", romaji: "yoteihyou" },
+  { word: "打ち合わせ", kana: "うちあわせ", romaji: "uchiawase" },
+  { word: "確認済み", kana: "かくにんずみ", romaji: "kakuninzumi" },
+];
