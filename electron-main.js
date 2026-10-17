@@ -13,6 +13,9 @@ const googleTokenUrl = "https://oauth2.googleapis.com/token";
 const googleCalendarEventsUrl = "https://www.googleapis.com/calendar/v3/calendars";
 const googleCalendarListUrl = "https://www.googleapis.com/calendar/v3/users/me/calendarList";
 const appIconPath = path.join(__dirname, "assets", "tray-icon.png");
+// 展示版(exhibition/app-main.js から起動)では、起動時にウィンドウを出さずトレイに常駐するだけにする
+const exhibitionMode = process.env.MICRO_SLOW_EXHIBITION === "1";
+const slowModeListeners = [];
 
 function createWindow() {
   mainWindow = new BrowserWindow({
@@ -33,7 +36,9 @@ function createWindow() {
 
   mainWindow.loadFile(path.join(__dirname, "index.html"));
   mainWindow.once("ready-to-show", () => {
-    mainWindow.show();
+    if (!exhibitionMode) {
+      mainWindow.show();
+    }
   });
   mainWindow.on("close", (event) => {
     if (!app.isQuitting) {
@@ -111,6 +116,7 @@ function enterSlowMode() {
   mainWindow.setAlwaysOnTop(true, "screen-saver");
   mainWindow.focus();
   animateWindowOpacity(0, 1, 500);
+  slowModeListeners.forEach((listener) => listener("enter"));
 }
 
 function leaveSlowMode() {
@@ -123,6 +129,7 @@ function leaveSlowMode() {
     }
     mainWindow.hide();
     mainWindow.setOpacity(1);
+    slowModeListeners.forEach((listener) => listener("leave"));
   });
 }
 
@@ -541,3 +548,19 @@ app.on("before-quit", () => {
 });
 
 app.on("window-all-closed", () => {});
+
+// 展示版から使う口。通常の起動(electron-main.jsが入口)では誰も呼ばない
+module.exports = {
+  // 展示の予定を渡す(nullで消す)。アプリは手入力の予定と同じように扱い、5分前に自動で始める
+  setExhibitionEvent(event) {
+    mainWindow?.webContents.send("exhibition-event", event);
+  },
+  // 予定5分前の判定を満たしていれば、アプリの定期判定を待たずにすぐ始めさせる
+  triggerSlow(eventId) {
+    mainWindow?.webContents.send("electron-start-slow", eventId);
+  },
+  // ゆっくリフレッシュの全画面表示が始まった("enter")・終わってウィンドウが隠れた("leave")ときに呼ばれる
+  onSlowModeChange(listener) {
+    slowModeListeners.push(listener);
+  },
+};

@@ -37,7 +37,8 @@ migrateStorageKey(storageKeys.recentSlows, legacyStorageKeys.recentSlows);
 
 const storedSource = localStorage.getItem(storageKeys.source);
 const storedEvents = readStoredEvents() || [];
-const runtimeEvents = storedEvents.filter((event) => event.source !== "sample");
+// 展示の予定(source: "exhibition")はその回の体験だけのものなので、起動し直したら持ち越さない
+const runtimeEvents = storedEvents.filter((event) => event.source !== "sample" && event.source !== "exhibition");
 if (runtimeEvents.length !== storedEvents.length) {
   localStorage.setItem(storageKeys.events, JSON.stringify(runtimeEvents));
 }
@@ -387,7 +388,10 @@ function selectSlowForEvent(event, index) {
     .sort((a, b) => a.score - b.score)
     .map((item) => item.slow);
 
-  return ordered.find((slow) => !state.recentSlowIds.includes(slow.id)) || ordered[0];
+  // 展示の予定は、会場で成り立ちにくい体験(手元に温かいものが要るなど)を除いて選ぶ
+  const allowed = ordered.filter((slow) => !(event.excludeSlowIds || []).includes(slow.id));
+  const candidates = allowed.length > 0 ? allowed : ordered;
+  return candidates.find((slow) => !state.recentSlowIds.includes(slow.id)) || candidates[0];
 }
 
 // 予定開始5分前の時点で、前の予定がまだ続いていなければ余白あり
@@ -403,12 +407,17 @@ function hasPreEventSpace(event) {
     });
 }
 
-// 自動で届く設定か。余白ありは既定で「届く」(見送り可)、余白少は既定で届かず、手動で「届く」にできる
+// 自動で届く設定か。余白ありは既定で「届く」(見送り可)、余白少は既定で届かず、手動で「届く」にできる。
+// 展示の予定は、展示用PCのカレンダーにほかの予定があっても必ず届ける
 function isAutoEnabled(proposal) {
   if (state.dismissed.has(proposal.id)) {
     return false;
   }
-  return proposal.hasSpace || state.deliverDespiteNoSpace.has(proposal.id);
+  return proposal.hasSpace || isExhibitionEvent(proposal.event) || state.deliverDespiteNoSpace.has(proposal.id);
+}
+
+function isExhibitionEvent(event) {
+  return event.source === "exhibition";
 }
 
 function buildProposalForEvent(event, index) {
@@ -490,7 +499,7 @@ function activateSource(source) {
 }
 
 function replaceEventsFromGoogle(events) {
-  const localEvents = state.events.filter((event) => event.source === "manual");
+  const localEvents = state.events.filter((event) => event.source === "manual" || isExhibitionEvent(event));
   state.events = [...events, ...localEvents].sort((a, b) => minutesFromTime(a.start) - minutesFromTime(b.start));
   writeStoredEvents();
   const eventIds = new Set(state.events.map((event) => event.id));
@@ -650,11 +659,12 @@ function isAutoStartDue(proposal, minutes = nowMinutes()) {
   }
 
   // 余白少を手動で「届く」にした予定は、前の予定の最中でも届ける
-  if (proposal.hasSpace && state.events.some((event) => isCurrentEvent(event, minutes))) {
+  const exhibition = isExhibitionEvent(proposal.event);
+  if (!exhibition && proposal.hasSpace && state.events.some((event) => isCurrentEvent(event, minutes))) {
     return false;
   }
 
-  const hasEarlierUpcomingEvent = state.events.some((event) => {
+  const hasEarlierUpcomingEvent = !exhibition && state.events.some((event) => {
     const start = minutesFromTime(event.start);
     return minutes <= start && start < proposal.eventStartMinutes;
   });
@@ -686,6 +696,25 @@ function startDueSlow() {
 
   state.startedAutomatically.add(proposal.id);
   startSlow(proposal.id);
+}
+
+// 展示版から届く予定。前の回の展示の予定と入れ替える(nullなら消すだけ)。
+// 展示用PCで初期設定がまだでも始められるよう、そのときは手入力のカレンダーとして初期設定を済ませる
+function setExhibitionEvent(exhibitionEvent) {
+  state.events = state.events.filter((event) => !isExhibitionEvent(event));
+  if (exhibitionEvent) {
+    state.events.push({ ...exhibitionEvent, source: "exhibition" });
+    state.events.sort((a, b) => minutesFromTime(a.start) - minutesFromTime(b.start));
+    state.dismissed.delete(exhibitionEvent.id);
+    state.startedAutomatically.delete(exhibitionEvent.id);
+  }
+  writeStoredEvents();
+  syncReminderBackends();
+  if (exhibitionEvent && !state.onboarded) {
+    completeOnboarding("manual");
+  } else if (state.view === "home") {
+    renderHome();
+  }
 }
 
 function bootDesktopRuntime() {
@@ -994,5 +1023,6 @@ startAutoStartScheduler();
 startGoogleAutoSync();
 if (desktop?.isElectron) {
   desktop.onStartSlow(startSlowFromExternalTrigger);
+  desktop.onExhibitionEvent?.(setExhibitionEvent);
 }
 syncReminderBackends();

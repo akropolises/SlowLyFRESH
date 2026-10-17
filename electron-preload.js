@@ -20,6 +20,11 @@ const bridge = {
   clearGoogleAuth() {
     return ipcRenderer.invoke("clear-google-auth");
   },
+  onExhibitionEvent(callback) {
+    ipcRenderer.on("exhibition-event", (_event, exhibitionEvent) => {
+      callback(exhibitionEvent);
+    });
+  },
   onStartSlow(callback) {
     ipcRenderer.on("electron-start-slow", (_event, proposalId) => {
       callback(proposalId);
