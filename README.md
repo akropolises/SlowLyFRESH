@@ -84,11 +84,13 @@ Client SecretはGitにコミットしません。
 - `scripts/make-with-local-config.js`: `config.local.js` を成果物にだけ含める検証用ビルドスクリプト
 - `scripts/make-exhibition.js`: 展示用PCで動かす展示版のzipを `out/exhibition/` に作るビルドスクリプト
 - `scripts/demo/`: 展示用デモ動画(操作デモ・コンセプト)の録画スクリプト
+- `scripts/export-artwork.js`: 振り返りキャンバスと呼吸円のSVG書き出しスクリプト
 - `exhibition/`: 展示版(黒子の作業の途中に、本物のゆっくリフレッシュが差し込まれる)
 - `assets/tray-icon.png`: Trayとウィンドウで使うアプリアイコン
 - `assets/app-icon.ico`: Windowsビルド用アイコン
 - `assets/fonts/`: ゆっくリフレッシュ中と色選択で使うZen Kaku Gothic New(SIL Open Font License、`OFL.txt` を同梱)
 - `micro-slows.js`: アプリが読み込むMicro Slowデータ
+- `artwork-shapes.js`: 振り返りキャンバスの1滴の形(アプリの描画とSVG書き出しで共有)
 - `config.js`: 共有用の既定設定
 - `config.example.js`: 個人設定ファイルのひな形
 - `CONTRIBUTING.md`: 複数人開発の手順
@@ -127,7 +129,7 @@ npm run make:local
 
 この場合も `config.local.js` はGitには入りません。packaging中にだけ成果物へコピーされます。
 
-展示用の動画(いずれもMP4、1920x1080、24fps、無音、ループ再生向け)は `scripts/demo/` のスクリプトで録画します。録画中は約1分間、デモ用のウィンドウが最前面に表示されます。動画ではサンプルの予定と時計を使い、実アプリの記録やGoogle連携には触れません。
+展示用の動画(いずれもMP4、1920x1080(縦長版は1080x1920)、24fps、無音、ループ再生向け)は `scripts/demo/` のスクリプトで録画します。録画中は約1分間、デモ用のウィンドウが最前面に表示されます。動画ではサンプルの予定と時計を使い、実アプリの記録やGoogle連携には触れません。
 
 操作デモ(約57秒)は次で録画します。ゆっくリフレッシュ本体は5倍速で見せます。
 
@@ -152,6 +154,29 @@ npm run demo:concept-short
 ```
 
 成果物は `out/demo/micro-slow-concept-short.mp4` に出力されます。
+
+縦置きのディスプレイ向けに、コンセプト動画の縦長版(1080x1920)も録画できます。ディスプレイの高さが足りなくても録画できるよう、縦長のページを90度回して横長のウィンドウに描き、書き出すときに向きを戻しています。
+
+```powershell
+npm run demo:concept:portrait
+npm run demo:concept-short:portrait
+```
+
+成果物は `out/demo/micro-slow-concept-portrait.mp4` と `out/demo/micro-slow-concept-short-portrait.mp4` に出力されます。
+
+振り返りキャンバスの記録と、ゆっくリフレッシュ中の呼吸円をSVGに書き出す場合は次を実行します。SVGはIllustratorで開いて編集でき、そのまま.aiとして保存できます。背景は透明です。
+
+```powershell
+npm run export:artwork
+```
+
+アプリの記録フォルダ(`%APPDATA%\micro-slow` など)を自動で探し、一時フォルダに複製してから読むので、アプリの記録は書き換えません。アプリを終了してから実行してください。記録フォルダを指定する場合は `-- --user-data=<フォルダ>` を、書き出し先を変える場合は `-- --out=<フォルダ>` を付けます。
+
+成果物は `out/artwork/` に出力されます。
+
+- `breath-circle.svg`: 呼吸円(呼吸がいちばん大きく濃いときの形。アニメーションと霧のぼかしは含まない)
+- `<日付>/canvas.svg`: その日のキャンバス全体(1滴ずつグループ分け、アプリと同じ360px四方で切り取り)
+- `<日付>/drop-01-green.svg` など: 1滴ずつ(にじみ全体が収まる大きさ)
 
 展示会場では、展示版を使います。体験者が意味のない作業をしているうちに、トレイに常駐している本物のゆっくリフレッシュが差し込まれます。展示用PCで動かすzipは次で作り、`out/exhibition/` に出力されます。記録は普段のアプリと別の場所に保存されます。使い方、進行設定、作業の増やし方は `exhibition/README.md` を参照してください。
 

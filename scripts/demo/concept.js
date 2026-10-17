@@ -3,6 +3,15 @@
 // 「Enterですぐ戻れること」「最後に色を選ぶこと」「4分前には終わること」だけを、ひとつずつゆっくり伝える。
 const SLOW_RATE = 3; // 画面内のゆっくリフレッシュを少し早送りし、霧の進みを見せる
 
+// 縦長版(縦置きのディスプレイ向け)はレイアウトだけを切り替え、台本は横長と共通にする
+const searchParams = new URLSearchParams(location.search);
+if (searchParams.get("orientation") === "portrait") {
+  document.documentElement.classList.add("portrait");
+  if (searchParams.get("rotate") === "1") {
+    document.documentElement.classList.add("rotated");
+  }
+}
+
 const headline = document.querySelector("#headline");
 const headlineMain = headline.querySelector(".main");
 const headlineSub = headline.querySelector(".sub");
@@ -35,7 +44,8 @@ async function setHeadline(main, sub = "", position = "top") {
     headline.classList.remove("show");
     await sleep(1000);
   }
-  headlineMain.innerHTML = main;
+  // 「｜」は縦長のときだけ改行する位置
+  headlineMain.innerHTML = main.replace(/｜/g, '<br class="pbr">');
   headlineSub.innerHTML = sub;
   headline.classList.remove("center", "top");
   headline.classList.add(position);
@@ -141,13 +151,13 @@ async function runTimeline() {
   await entered;
   await typing;
   await until(25);
-  await setHeadline("作業中でも、画面いっぱいに自動ではじまります。", "驚かなくて大丈夫。ゆっくリフレッシュの時間です");
+  await setHeadline("作業中でも、｜画面いっぱいに自動ではじまります。", "驚かなくて大丈夫。ゆっくリフレッシュの時間です");
   await until(29);
   snap("c04-started");
 
   // 何をすればよいか(31〜37.5秒)
   await until(31.5);
-  await setHeadline("画面の一文にしたがって、ひとつの感覚を味わいます。", "霧が画面を満たしたら終わり。長くても60秒です");
+  await setHeadline("画面の一文にしたがって、｜ひとつの感覚を味わいます。", "霧が画面を満たしたら終わり。長くても60秒です");
   await until(35);
   snap("c05-sense");
 
@@ -239,13 +249,13 @@ async function runShortTimeline() {
   await entered;
   await typing;
   await until(16);
-  await setHeadline("作業中でも、画面いっぱいに自動ではじまります。", "驚かなくて大丈夫。ゆっくリフレッシュの時間です");
+  await setHeadline("作業中でも、｜画面いっぱいに自動ではじまります。", "驚かなくて大丈夫。ゆっくリフレッシュの時間です");
   await until(19);
   snap("s02-started");
 
   // 何をすればよいか(21〜26秒)
   await until(21);
-  await setHeadline("画面の一文にしたがって、ひとつの感覚を味わいます。", "霧が画面を満たしたら終わり。長くても60秒です");
+  await setHeadline("画面の一文にしたがって、｜ひとつの感覚を味わいます。", "霧が画面を満たしたら終わり。長くても60秒です");
   await until(24.5);
   snap("s03-sense");
 
@@ -293,7 +303,7 @@ window.startDemo = async () => {
   const stopRecording = await window.startRecording();
   t0 = Date.now();
   try {
-    const variant = new URLSearchParams(location.search).get("variant");
+    const variant = searchParams.get("variant");
     await (variant === "short" ? runShortTimeline() : runTimeline());
   } catch (error) {
     log(`timeline failed: ${error.stack || error}`);

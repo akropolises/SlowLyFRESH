@@ -1,21 +1,34 @@
-// デモ動画の録画処理(stage.js / concept.js で共有)。
+// デモ動画の録画処理(stage.js / concept.js で共有)。台本のページが自分自身の画面を取り込んで録画する。
 const log = (message) => window.demoBridge?.log(message);
 
 // この環境のH.264書き出しは1080pで毎秒27枚ほどが限界で、30にすると遅れがたまって末尾が欠けるため24にする
 const OUTPUT_FPS = 24;
 
-// 画面キャプチャの解像度はディスプレイ環境によってぶれるため、1920x1080のキャンバスに描き直してから録画する
+// 出力は画面(1280x720)の1.5倍の1920x1080。縦長版はページを90度回して横長の画面に描いているので、
+// 書き出すときに回転を戻して1080x1920にする(ディスプレイの高さが足りなくても縦長を録画できるようにするため)
 window.startRecording = async function startRecording() {
-  const stream = await navigator.mediaDevices.getDisplayMedia({ video: { frameRate: OUTPUT_FPS }, audio: false });
+  const rotated = document.documentElement.classList.contains("rotated");
+  // ウィンドウの内寸は環境によって数px ぶれるため、出力の大きさは固定する
+  const captureWidth = 1920;
+  const captureHeight = 1080;
+  // 大きさを指定しないとディスプレイの大きさに合わせて縮められるため、出力と同じ大きさで取り込む
+  const stream = await navigator.mediaDevices.getDisplayMedia({
+    video: { width: { max: captureWidth }, height: { max: captureHeight }, frameRate: OUTPUT_FPS },
+    audio: false,
+  });
   const captureTrack = stream.getVideoTracks()[0];
   const { width, height } = captureTrack.getSettings();
-  log(`capture ${width}x${height} -> 1920x1080`);
 
   const canvas = document.createElement("canvas");
-  canvas.width = 1920;
-  canvas.height = 1080;
+  canvas.width = rotated ? captureHeight : captureWidth;
+  canvas.height = rotated ? captureWidth : captureHeight;
+  log(`capture ${width}x${height} -> ${canvas.width}x${canvas.height}`);
   const context = canvas.getContext("2d");
   context.imageSmoothingQuality = "high";
+  if (rotated) {
+    // ページは-90度回して描いてあるので、+90度回して元の向きに戻す
+    context.setTransform(0, 1, -1, 0, canvas.width, 0);
+  }
   const output = canvas.captureStream(0);
   const outputTrack = output.getVideoTracks()[0];
 
@@ -29,7 +42,7 @@ window.startRecording = async function startRecording() {
     while (drawing) {
       const { value: frame, done } = await reader.read();
       if (done) break;
-      context.drawImage(frame, 0, 0, canvas.width, canvas.height);
+      context.drawImage(frame, 0, 0, captureWidth, captureHeight);
       frame.close();
       firstFrameDrawn();
     }
@@ -41,7 +54,7 @@ window.startRecording = async function startRecording() {
   // 見えない1px要素を毎フレーム描き換えて、常に新しいフレームが届くようにする
   const pulse = document.createElement("div");
   pulse.style.cssText = "position: fixed; left: 0; top: 0; width: 1px; height: 1px; z-index: 2147483647; pointer-events: none;";
-  document.body.append(pulse);
+  document.documentElement.append(pulse);
   let pulseOn = false;
   const pulseFrame = () => {
     if (!drawing) return;
@@ -53,15 +66,17 @@ window.startRecording = async function startRecording() {
 
   // 書き出しは一定間隔で行う(キャンバスに透明な点を描いて更新扱いにしないと、同じ絵のフレームは書き出されない)
   const tick = setInterval(() => {
+    context.save();
+    context.setTransform(1, 0, 0, 1, 0, 0);
     context.fillStyle = "rgba(0, 0, 0, 0)";
     context.fillRect(0, 0, 1, 1);
+    context.restore();
     outputTrack.requestFrame();
   }, 1000 / OUTPUT_FPS);
 
   // 1080pのVP9はCPUでは書き出しが追いつかず末尾が欠けるため、ハードウェアで処理しやすいH.264を使う。
   // 展示会場のプレーヤーでも再生しやすいよう、入れ物はMP4にする
-  const mimeType = "video/mp4;codecs=avc1.640028";
-  const recorder = new MediaRecorder(output, { mimeType, videoBitsPerSecond: 10_000_000 });
+  const recorder = new MediaRecorder(output, { mimeType: "video/mp4;codecs=avc1.640028", videoBitsPerSecond: 10_000_000 });
   const chunks = [];
   recorder.ondataavailable = (event) => event.data.size > 0 && chunks.push(event.data);
   // エンコーダーの立ち上がりで最初の1秒ほどが抜けるため、録画を始めてから少し待ってから台本を進める

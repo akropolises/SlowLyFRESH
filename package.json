@@ -11,12 +11,15 @@
     "make": "electron-forge make",
     "make:local": "node scripts/make-with-local-config.js",
     "make:exhibition": "node scripts/make-exhibition.js",
+    "export:artwork": "electron scripts/export-artwork.js",
     "demo:record": "electron scripts/demo/record-demo.js",
     "demo:concept": "electron scripts/demo/record-demo.js --video=concept",
     "demo:concept-short": "electron scripts/demo/record-demo.js --video=concept-short",
+    "demo:concept:portrait": "electron scripts/demo/record-demo.js --video=concept-portrait",
+    "demo:concept-short:portrait": "electron scripts/demo/record-demo.js --video=concept-short-portrait",
     "exhibit": "electron exhibition/app-main.js",
     "exhibit:windowed": "electron exhibition/app-main.js --windowed",
-    "check": "node --check app.js && node --check micro-slows.js && node --check electron-main.js && node --check electron-preload.js && node --check exhibition/app-main.js && node --check exhibition/main.js && node --check exhibition/preload.js && node --check exhibition/shell/shell.js"
+    "check": "node --check app.js && node --check artwork-shapes.js && node --check micro-slows.js && node --check electron-main.js && node --check electron-preload.js && node --check exhibition/app-main.js && node --check exhibition/main.js && node --check exhibition/preload.js && node --check exhibition/shell/shell.js"
   },
   "devDependencies": {
     "@electron-forge/cli": "^7.11.2",

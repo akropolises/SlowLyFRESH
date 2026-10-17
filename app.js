@@ -9,13 +9,7 @@ const storageKeys = {
   artwork: "micro-slow-artwork",
 };
 
-// 出口で選べる感覚色と、キャンバスの滲み描画に使う実際のRGB値の対応表
-const senseColorHex = {
-  green: "#6f9f89",
-  gold: "#d7a447",
-  blue: "#668ca8",
-  rose: "#c96f61",
-};
+const { senseColorHex, inkBlotLayers } = window.MicroSlowArtwork;
 const legacyStorageKeys = {
   source: "slow-index-source",
   events: "slow-index-events",
@@ -140,27 +134,19 @@ function refreshArtworkDate() {
   writeArtworkState();
 }
 
-function randomJitter(range) {
-  return (Math.random() - 0.5) * range;
-}
-
 // 選んだ色を1滴分のデータとして今日のキャンバスに追加する
 function addArtworkDrop(colorKey) {
   refreshArtworkDate();
   const drop = {
     color: colorKey,
-    x: 0.5 + randomJitter(0.5),
-    y: 0.5 + randomJitter(0.5),
+    // キャンバス全体(0〜1)のどこにでも落ちる。端に近い滴は、にじみの一部がキャンバスの外で切れる
+    x: Math.random(),
+    y: Math.random(),
     size: 40 + Math.random() * 50,
   };
   state.artwork.todayDrops.push(drop);
   writeArtworkState();
   return drop;
-}
-
-function pseudoRandom(seed) {
-  const value = Math.sin(seed) * 43758.5453;
-  return value - Math.floor(value);
 }
 
 function hexToRgb(hex) {
@@ -173,29 +159,15 @@ function hexToRgb(hex) {
   };
 }
 
-// 1滴の絵の具を、水面に垂らしたインクのように「にじんで歪んだ」見た目にするため、
-// 中心をわずかにずらした複数の半透明円を重ねて描画する(React版ArtworkCanvasと同じロジック)。
+// 1滴の形はartwork-shapes.jsで決める(SVG書き出しと同じ形にするため)
 function drawInkBlot(ctx, drop, canvasSize) {
-  const hex = senseColorHex[drop.color] || "#999999";
-  const rgb = hexToRgb(hex);
-  const seed = drop.x * 97.13 + drop.y * 57.31 + drop.size * 13.7;
-  const size = drop.size * (canvasSize / 360);
-  const cx = drop.x * canvasSize;
-  const cy = drop.y * canvasSize;
-
-  for (let i = 3; i >= 0; i -= 1) {
-    const s = seed + i * 19.7;
-    const offsetX = (pseudoRandom(s + 1) - 0.5) * size * 0.3;
-    const offsetY = (pseudoRandom(s + 2) - 0.5) * size * 0.3;
-    const scale = 1 + i * (0.22 + pseudoRandom(s + 3) * 0.12);
-    const layerSize = size * scale;
-    const opacity = Math.max(0.32 - i * 0.06 + pseudoRandom(s + 5) * 0.05, 0.05);
-
+  inkBlotLayers(drop, canvasSize).forEach((layer) => {
+    const rgb = hexToRgb(layer.color);
     ctx.beginPath();
-    ctx.fillStyle = `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, ${opacity})`;
-    ctx.arc(cx + offsetX, cy + offsetY, layerSize / 2, 0, Math.PI * 2);
+    ctx.fillStyle = `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, ${layer.opacity})`;
+    ctx.arc(layer.cx, layer.cy, layer.r, 0, Math.PI * 2);
     ctx.fill();
-  }
+  });
 }
 
 function renderDropsOnCanvas(canvasEl, drops) {

@@ -359,6 +359,112 @@
         box-shadow: 0 1px 0 #cfcbc0, 0 4px 10px rgba(30, 40, 35, 0.18);
         background: #eef4f1;
       }
+
+      /* 見出しの改行は縦長のときだけ効かせる */
+      .pbr {
+        display: none;
+      }
+
+      /* 縦長(縦置きのディスプレイ向け、720x1280で組んで1080x1920で録画) */
+      html.portrait body {
+        width: 720px;
+        height: 1280px;
+      }
+
+      /* 録画時は、縦長のページを-90度回して横長(1280x720)のウィンドウに収める(recorder.jsが書き出し時に戻す) */
+      html.portrait.rotated {
+        width: 1280px;
+        height: 720px;
+        overflow: hidden;
+      }
+
+      html.portrait.rotated body {
+        position: absolute;
+        left: 0;
+        top: 0;
+        transform-origin: 0 0;
+        transform: translate(0, 720px) rotate(-90deg);
+      }
+
+      html.portrait .pbr {
+        display: inline;
+      }
+
+      html.portrait .headline {
+        padding: 0 40px;
+      }
+
+      html.portrait .headline.top {
+        top: 250px;
+      }
+
+      html.portrait .headline.center {
+        top: 560px;
+      }
+
+      html.portrait .headline .main {
+        font-size: 34px;
+        line-height: 1.6;
+      }
+
+      html.portrait .headline .sub {
+        font-size: 20px;
+        line-height: 1.7;
+      }
+
+      html.portrait .fast-word {
+        font-size: 42px;
+      }
+
+      html.portrait .fast-word:nth-child(1) {
+        left: 90px !important;
+        top: 460px !important;
+      }
+
+      html.portrait .fast-word:nth-child(2) {
+        left: 220px !important;
+        top: 620px !important;
+      }
+
+      html.portrait .fast-word:nth-child(3) {
+        left: 300px !important;
+        top: 780px !important;
+      }
+
+      html.portrait .app-name {
+        top: 720px;
+        padding: 0 40px;
+      }
+
+      html.portrait .app-name small {
+        line-height: 1.7;
+      }
+
+      html.portrait .timeline {
+        left: 40px;
+        right: 40px;
+        top: 580px;
+      }
+
+      html.portrait .timeline-meeting {
+        font-size: 17px;
+      }
+
+      html.portrait .screen {
+        left: 40px;
+        top: 560px;
+        width: 640px;
+        height: 360px;
+      }
+
+      html.portrait .screen-inner {
+        transform: scale(0.5);
+      }
+
+      html.portrait .keycap {
+        left: 300px;
+        top: 1000px;
+      }
     </style>
   </head>
   <body>
