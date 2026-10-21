@@ -1,21 +1,23 @@
 // 展示の進行。はじめる → 作業する → 本物のゆっくリフレッシュが差し込まれる → 作業に戻る → 予定へ向かう、を1回の体験として回す。
-// 作業は2通り。config.workMode が "own"(既定)なら、体験者は実際のアプリ(Gmailなど)で作業し、展示の画面は左下の小さな表示
-// (次の予定まであと何分)だけになる。"decoy" なら、展示の画面の中に黒子の作業(tasks/)を出す。
+// 作業は2通り。「実際のアプリ」なら、体験者は実際のアプリ(Gmailなど)で作業し、展示の画面は左下の小さな表示
+// (次の予定まであと何分)だけになる。黒子の作業(tasks/)なら、展示の画面の中にその作業を出す。
+// どれにするかは、スタッフが Ctrl+Alt+Shift+T で次の回のぶんを切り替える(最初は config.workMode で決まる)
 const config = window.EXHIBITION_CONFIG;
-// config.taskIdsに挙げた黒子の作業を、スタッフが Ctrl+Alt+Shift+T で切り替えて使う(作業のファイル自体は残しておける)
 const tasks = config.taskIds
   .map((id) => window.EXHIBITION_TASKS.find((task) => task.id === id))
   .filter(Boolean);
+const OWN_WORK = { id: "own", title: "実際のアプリ" };
+// 切り替える順番: 実際のアプリ → 黒子の作業(config.taskIdsの順) → 実際のアプリ …
+const workChoices = [OWN_WORK, ...tasks];
 const phrases = window.TASK_PHRASES;
 const bridge = window.exhibitBridge;
 const params = new URLSearchParams(location.search);
+// --task=<id> を付けて起動したときは、いつもその黒子の作業を使う
 const fixedTaskId = params.get("task");
-// --task=<id> を付けて起動したときは、黒子の作業モードでその作業を使う
-const decoyMode = config.workMode === "decoy" || Boolean(fixedTaskId);
 const MINUTE = 60000;
 const MEETING_ID = "exhibition-meeting";
 // スタッフが選んだ作業を、起動し直しても覚えておく
-const TASK_STORAGE_KEY = "exhibition-task-id";
+const WORK_STORAGE_KEY = "exhibition-work";
 // 小さな表示のウィンドウの大きさと位置。ふだんは左下に次の予定だけ、リマインドのときは画面下の中央に置く(影のぶん余白を含む)
 const WIDGET_SIZES = {
   next: { width: 480, height: 76 },
@@ -45,6 +47,7 @@ const endCard = document.querySelector("#endCard");
 // phase: launcher → working → after(ゆっくリフレッシュ中と、その後) → leaving → end
 const session = {
   phase: "launcher",
+  // この回の黒子の作業。実際のアプリで作業する回は null
   task: null,
   // この体験の「次の予定」。開始時刻は体験ごとに、今の時刻から決める
   meeting: null,
@@ -74,33 +77,33 @@ function clearSessionTimers() {
 
 const postToTask = (message) => taskFrame.contentWindow?.postMessage({ source: "exhibit-shell", ...message }, "*");
 
-// 次の回に使う黒子の作業。体験者には選ばせず、開始画面は「はじめる」だけにする
-let currentTask = (() => {
+// 次の回の作業。体験者には選ばせず、開始画面は「はじめる」だけにする
+let currentWork = (() => {
   let saved = null;
   try {
-    saved = localStorage.getItem(TASK_STORAGE_KEY);
+    saved = localStorage.getItem(WORK_STORAGE_KEY);
   } catch {
-    // 保存できない環境では、いつも最初の作業から
+    // 保存できない環境では、config.workMode で決まる最初の作業から
   }
-  return tasks.find((task) => task.id === saved) || tasks[0];
+  const fallback = config.workMode === "decoy" && tasks.length > 0 ? tasks[0] : OWN_WORK;
+  return workChoices.find((choice) => choice.id === saved) || fallback;
 })();
 
-// スタッフ用: 次の回に使う黒子の作業を順に切り替え、画面の隅に一瞬だけ作業名を出す。体験の途中なら次の回から変わる
-function switchTask() {
-  if (!decoyMode) return;
-  currentTask = tasks[(tasks.indexOf(currentTask) + 1) % tasks.length];
+// スタッフ用: 次の回の作業を順に切り替え、画面の隅に一瞬だけ名前を出す。体験の途中なら次の回から変わる
+function switchWork() {
+  currentWork = workChoices[(workChoices.indexOf(currentWork) + 1) % workChoices.length];
   try {
-    localStorage.setItem(TASK_STORAGE_KEY, currentTask.id);
+    localStorage.setItem(WORK_STORAGE_KEY, currentWork.id);
   } catch {
     // 覚えておけなくても切り替え自体はできる
   }
-  staffNote.textContent = `次の作業: ${currentTask.title}`;
+  staffNote.textContent = `次の作業: ${currentWork.title}`;
   staffNote.classList.add("show");
-  clearTimeout(switchTask.timer);
-  switchTask.timer = setTimeout(() => staffNote.classList.remove("show"), 2000);
+  clearTimeout(switchWork.timer);
+  switchWork.timer = setTimeout(() => staffNote.classList.remove("show"), 2000);
 }
 
-startButton.addEventListener("click", () => startSession(currentTask));
+startButton.addEventListener("click", () => startSession(currentWork === OWN_WORK ? null : currentWork));
 
 function showLauncher() {
   resetSession();
@@ -166,7 +169,7 @@ function startSession(task) {
   session.phase = "working";
   launcher.classList.add("hidden");
 
-  if (decoyMode) {
+  if (session.task) {
     setWindowMode("window");
     desktop.classList.remove("hidden");
     windowTitle.textContent = task.windowTitle;
@@ -198,7 +201,7 @@ function slowStarted() {
 function showMeetingReminder() {
   if (session.phase !== "after") return;
   const text = `まもなく ${session.meeting.start} ${config.meeting.title}`;
-  if (!decoyMode) {
+  if (!session.task) {
     widgetText.textContent = text;
     widget.classList.add("is-reminder");
     setWindowMode("widget", WIDGET_SIZES.reminder);
@@ -214,7 +217,7 @@ function leaveForMeeting() {
   if (session.phase !== "after") return;
   session.phase = "leaving";
   clearSessionTimers();
-  if (!decoyMode) {
+  if (!session.task) {
     showEndCard();
     return;
   }
@@ -241,6 +244,28 @@ widgetButton.addEventListener("click", leaveForMeeting);
 meetingReminderButton.addEventListener("click", leaveForMeeting);
 workClose.addEventListener("click", leaveForMeeting);
 endCard.addEventListener("click", showLauncher);
+// 終わりの画面では、Enterキーでも開始画面へ戻れる。そのEnterを押しっぱなしにしても次の回が始まらないよう、
+// 戻ってからEnterを離すまでは、開始画面の「はじめる」にEnterを渡さない
+let holdingReturnEnter = false;
+document.addEventListener(
+  "keydown",
+  (event) => {
+    if (event.key !== "Enter") return;
+    if (session.phase === "end") {
+      event.preventDefault();
+      if (!event.repeat) {
+        holdingReturnEnter = true;
+        showLauncher();
+      }
+      return;
+    }
+    if (holdingReturnEnter) event.preventDefault();
+  },
+  true
+);
+document.addEventListener("keyup", (event) => {
+  if (event.key === "Enter") holdingReturnEnter = false;
+});
 
 
 // 次の予定まであと何分。予定が迫ると色が変わる(時刻はWindowsのタスクバーの時計に任せる)
@@ -297,11 +322,11 @@ function showToast(title, body) {
 // スタッフ用キー(main processのグローバルショートカットから届く)
 bridge?.onCommand((command) => {
   if (command === "reset") showLauncher();
-  if (command === "next-task") switchTask();
+  if (command === "next-task") switchWork();
   if (command === "trigger" && session.phase === "working") {
     clearSessionTimers();
     session.nextEventTimer = setInterval(renderNextEvent, 500);
-    if (decoyMode) scheduleToast();
+    if (session.task) scheduleToast();
     scheduleSlow({ immediate: true });
   }
 });

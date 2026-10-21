@@ -2,7 +2,7 @@
 // 単体では起動せず、app-main.js から本物のアプリ(electron-main.js)と一緒に起動する。
 // 引数: --task=<id>(黒子の作業モードで作業を固定して開始画面を飛ばす) --windowed(開発用のウィンドウ表示)
 // スタッフ用キー(どのアプリが前にあっても効く): Ctrl+Alt+Shift+R 開始画面へ戻る / Ctrl+Alt+Shift+S すぐ差し込む /
-//   Ctrl+Alt+Shift+T 次の回の黒子の作業を切り替える / Ctrl+Alt+Shift+Q 終了
+//   Ctrl+Alt+Shift+T 次の回の作業を切り替える(実際のアプリ → 黒子の作業 …) / Ctrl+Alt+Shift+Q 終了
 const path = require("path");
 const { app, BrowserWindow, globalShortcut, ipcMain, powerSaveBlocker, screen } = require("electron");
 
