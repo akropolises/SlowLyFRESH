@@ -85,7 +85,7 @@ Client SecretはGitにコミットしません。
 - `scripts/make-exhibition.js`: 展示用PCで動かす展示版のzipを `out/exhibition/` に作るビルドスクリプト
 - `scripts/demo/`: 展示用デモ動画(操作デモ・コンセプト)の録画スクリプト
 - `scripts/export-artwork.js`: 振り返りキャンバスと呼吸円のSVG書き出しスクリプト
-- `exhibition/`: 展示版(黒子の作業の途中に、本物のゆっくリフレッシュが差し込まれる)
+- `exhibition/`: 展示版(体験者が実際のアプリで作業している途中に、本物のゆっくリフレッシュが差し込まれる)
 - `assets/tray-icon.png`: Trayとウィンドウで使うアプリアイコン
 - `assets/app-icon.ico`: Windowsビルド用アイコン
 - `assets/fonts/`: ゆっくリフレッシュ中と色選択で使うZen Kaku Gothic New(SIL Open Font License、`OFL.txt` を同梱)
@@ -178,7 +178,7 @@ npm run export:artwork
 - `<日付>/canvas.svg`: その日のキャンバス全体(1滴ずつグループ分け、アプリと同じ360px四方で切り取り)
 - `<日付>/drop-01-green.svg` など: 1滴ずつ(にじみ全体が収まる大きさ)
 
-展示会場では、展示版を使います。体験者が意味のない作業をしているうちに、トレイに常駐している本物のゆっくリフレッシュが差し込まれます。展示用PCで動かすzipは次で作り、`out/exhibition/` に出力されます。記録は普段のアプリと別の場所に保存されます。使い方、進行設定、作業の増やし方は `exhibition/README.md` を参照してください。
+展示会場では、展示版を使います。体験者が実際のアプリ(Gmailなど)で作業しているうちに、トレイに常駐している本物のゆっくリフレッシュが差し込まれます。体験中、展示の画面は左下の「次の予定まであと何分」だけになります。展示用PCで動かすzipは次で作り、`out/exhibition/` に出力されます。記録は普段のアプリと別の場所に保存されます。使い方、進行設定、作業の増やし方は `exhibition/README.md` を参照してください。
 
 ```powershell
 npm run make:exhibition

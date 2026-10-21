@@ -126,7 +126,88 @@ button {
   font-size: 13px;
 }
 
-/* 作業中のデスクトップ */
+/* 体験中の小さな表示。ウィンドウ自体は透明なので、ここで角丸の形と影を描く */
+body.mode-widget {
+  background: transparent;
+}
+
+.widget {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  padding: 10px 14px 14px 10px;
+}
+
+.widget-pill {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  width: 100%;
+  height: 100%;
+  padding: 0 10px 0 22px;
+  border: 1px solid #e4d8c4;
+  border-radius: 999px;
+  background: #fffdf8;
+  box-shadow: 0 6px 16px rgba(80, 64, 40, 0.18);
+  color: #3e362b;
+  font-size: 16px;
+  white-space: nowrap;
+}
+
+.widget.soon .widget-pill {
+  border-color: var(--alert);
+  background: var(--alert);
+  color: #fff;
+}
+
+.widget-text {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.widget-button {
+  display: none;
+  padding: 10px 26px;
+  border: 0;
+  border-radius: 999px;
+  background: #3e362b;
+  color: #fff;
+  font-size: 15px;
+}
+
+/* リマインドは、以前の作業画面のリマインドと同じ見た目のカードにして、画面下の中央に出す */
+.widget.is-reminder {
+  padding: 14px 18px 22px;
+}
+
+.widget.is-reminder .widget-pill {
+  gap: 28px;
+  padding: 0 20px 0 28px;
+  border: 0;
+  border-radius: 14px;
+  background: rgba(255, 253, 248, 0.98);
+  box-shadow: 0 10px 24px rgba(30, 40, 35, 0.24);
+  color: var(--text);
+  font-size: 18px;
+  font-weight: 500;
+}
+
+.widget.is-reminder .widget-button {
+  display: block;
+  padding: 12px 22px;
+  border-radius: 10px;
+  background: var(--accent);
+  font-size: 16px;
+  font-weight: 400;
+}
+
+.widget.is-reminder .widget-button:hover {
+  filter: brightness(1.08);
+}
+
+/* 黒子の作業モードの作業画面 */
 /* 作業中はアプリ自体がWindowsのウィンドウになるので、作業ウィンドウをその全面に広げる */
 .desktop {
   position: fixed;

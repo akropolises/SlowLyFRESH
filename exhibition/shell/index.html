@@ -17,7 +17,15 @@
     <!-- スタッフが作業を切り替えたときだけ、画面の隅に一瞬出る -->
     <p class="staff-note" id="staffNote"></p>
 
-    <!-- 作業中の画面。ここだけ全画面ではなくウィンドウで表示し、Windowsのタスクバー(と時計)が見える状態にする -->
+    <!-- 体験中の小さな表示。体験者は実際のアプリで作業し、展示の画面は画面の左下にこれだけを残す -->
+    <section class="widget hidden" id="widget">
+      <div class="widget-pill">
+        <span class="widget-text" id="widgetText"></span>
+        <button class="widget-button" id="widgetButton" type="button">作業を閉じて向かう</button>
+      </div>
+    </section>
+
+    <!-- 黒子の作業モード(config.js の workMode が "decoy")のときの作業画面 -->
     <section class="desktop hidden" id="desktop">
       <div class="work-window" id="workWindow">
         <div class="window-bar">
