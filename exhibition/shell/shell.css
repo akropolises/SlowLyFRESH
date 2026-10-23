@@ -118,6 +118,118 @@ button {
   opacity: 1;
 }
 
+/* スタッフ設定パネル。開始画面の上に重ねる */
+.settings {
+  position: fixed;
+  inset: 0;
+  z-index: 30;
+  display: grid;
+  place-items: center;
+  background: rgba(40, 36, 30, 0.35);
+}
+
+.settings-card {
+  display: grid;
+  gap: 14px;
+  width: min(720px, calc(100% - 48px));
+  padding: 28px 32px;
+  border-radius: 16px;
+  background: #fffdf8;
+  box-shadow: 0 20px 50px rgba(40, 36, 30, 0.3);
+  color: #3e362b;
+}
+
+.settings-card h2 {
+  margin: 0 0 4px;
+  font-size: 22px;
+  font-weight: 500;
+}
+
+.setting {
+  display: grid;
+  grid-template-columns: 13em minmax(0, 1fr) 8em;
+  align-items: center;
+  gap: 16px;
+  font-size: 16px;
+}
+
+.setting input[type="range"] {
+  width: 100%;
+  accent-color: var(--accent);
+}
+
+.setting output {
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+}
+
+.setting select {
+  grid-column: 2 / 4;
+  padding: 8px 10px;
+  border: 1px solid #e4d8c4;
+  border-radius: 8px;
+  background: #fff;
+  font: inherit;
+}
+
+.settings-group {
+  margin: 6px 0 -6px;
+  padding-top: 10px;
+  border-top: 1px solid #efe6d6;
+  color: var(--accent);
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.settings-card h2 + .settings-group {
+  padding-top: 0;
+  border-top: 0;
+}
+
+.settings-note {
+  margin: 0;
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.settings-buttons {
+  display: flex;
+  gap: 10px;
+}
+
+.settings-spacer {
+  flex: 1;
+}
+
+.settings-buttons button {
+  padding: 10px 18px;
+  border: 1px solid #e4d8c4;
+  border-radius: 10px;
+  background: #fff;
+  color: #3e362b;
+  font-size: 15px;
+}
+
+.settings-buttons button.primary {
+  border-color: var(--accent);
+  background: var(--accent);
+  color: #fff;
+}
+
+/* 展示用Gmailが使えないときの、スタッフ向けの小さな注意(開始画面の左下) */
+.mail-note {
+  position: fixed;
+  left: 16px;
+  bottom: 12px;
+  z-index: 20;
+  margin: 0;
+  padding: 6px 12px;
+  border-radius: 6px;
+  background: rgba(196, 72, 59, 0.85);
+  color: #fff;
+  font-size: 13px;
+}
+
 .demo-tag {
   padding: 2px 10px;
   border-radius: 6px;

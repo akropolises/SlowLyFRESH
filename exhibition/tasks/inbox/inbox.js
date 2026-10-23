@@ -1,5 +1,11 @@
-// 受信トレイ: メールや承認依頼が次々に届き、ボタンひとつで片づけていく。
-// 届くペースは片づけるペースより少しだけ速く、未読は減りきらない。正解・不正解はない
+// 受信トレイ: メールや承認依頼が次々に届き、ボタンひとつで片づけていく。正解・不正解はない。
+// 最初の未読の通数と、届くペース(1分あたりの通数)、届くのをやめるまでの秒数は、展示の画面から渡される
+// (スタッフ設定パネルの値。展示用Gmailに届くメールと同じ)。単体で開いたときは、ここに書いた値を使う
+const params = new URLSearchParams(location.search);
+const numberParam = (name, fallback) => (params.has(name) ? Number(params.get(name)) : fallback);
+const INITIAL_UNREAD = numberParam("initial", 23);
+const MAILS_PER_MINUTE = numberParam("rate", 5);
+const STOP_AFTER_SECONDS = numberParam("stopAfter", 100);
 const { senders, mailSubjects, mailPreviews, approvals } = window.TASK_PHRASES;
 const mailList = document.querySelector("#mailList");
 const unreadBadge = document.querySelector("#unreadBadge");
@@ -7,13 +13,14 @@ const approvalBadge = document.querySelector("#approvalBadge");
 const listMeta = document.querySelector("#listMeta");
 
 const MAX_ROWS = 40;
+// 最初の未読のうち、一覧に並べておく通数(残りは、片づけると下から出てくる)
+const INITIAL_ROWS = 9;
 const pickSender = TaskKit.picker(senders);
 const pickSubject = TaskKit.picker(mailSubjects);
 const pickPreview = TaskKit.picker(mailPreviews);
 const pickApproval = TaskKit.picker(approvals);
 // 一覧からあふれた分も未読として数え続ける(片づけきれない感じを残す)
 let overflow = 0;
-let arrivals = 0;
 
 function createMail({ arriving }) {
   const isApproval = Math.random() < 0.3;
@@ -39,7 +46,6 @@ function createMail({ arriving }) {
 }
 
 function arrive() {
-  arrivals += 1;
   mailList.prepend(createMail({ arriving: true }));
   while (mailList.children.length > MAX_ROWS) {
     mailList.lastElementChild.remove();
@@ -101,17 +107,32 @@ function createOlderMail() {
   return row;
 }
 
-// 最初から少し溜まっている
-for (let i = 0; i < 9; i += 1) {
+// 最初から未読が溜まっている
+for (let i = 0; i < Math.min(INITIAL_UNREAD, INITIAL_ROWS); i += 1) {
   mailList.append(createOlderMail());
 }
-overflow = 14;
+overflow = Math.max(INITIAL_UNREAD - INITIAL_ROWS, 0);
 updateCounts();
 updateTimes();
 
-// 序盤はゆっくり、慣れたころに少し速くなる
-TaskKit.every(1800, 3400, () => {
-  arrive();
-  if (arrivals > 8 && Math.random() < 0.35) TaskKit.after(500, arrive);
-});
+// 届く間隔は平均(60秒 / 1分あたりの通数)の 0.7〜1.3倍でばらつかせ、STOP_AFTER_SECONDS 秒たったら届くのをやめる。0通なら届かない。
+// 慣れてきたころ(8通届いたあと)は、ときどき(35%)0.5秒後にもう1通続けて届く
+if (MAILS_PER_MINUTE > 0) {
+  const meanMs = 60000 / MAILS_PER_MINUTE;
+  let arrivedCount = 0;
+  let stopped = false;
+  const arrivals = TaskKit.every(meanMs * 0.7, meanMs * 1.3, () => {
+    arrive();
+    arrivedCount += 1;
+    if (arrivedCount > 8 && Math.random() < 0.35) {
+      TaskKit.after(500, () => {
+        if (!stopped) arrive();
+      });
+    }
+  });
+  TaskKit.after(STOP_AFTER_SECONDS * 1000, () => {
+    stopped = true;
+    arrivals.stop();
+  });
+}
 TaskKit.every(5000, 5000, updateTimes);

@@ -9,4 +9,10 @@ contextBridge.exposeInMainWorld("exhibitBridge", {
   // 本物のアプリに「次の予定」を渡す(nullで消す)
   setMeeting: (meeting) => ipcRenderer.invoke("exhibit-set-meeting", meeting),
   triggerSlow: (eventId) => ipcRenderer.invoke("exhibit-trigger-slow", eventId),
+  // 展示用のGmailへのメールを始める・止める({ action: "start" | "stop" })。status はログインできているか
+  mail: (request) => ipcRenderer.invoke("exhibit-mail", request),
+  mailStatus: () => ipcRenderer.invoke("exhibit-mail-status"),
+  // スタッフ設定(ゆっくリフレッシュの最短開始、メールの通数)。setSettings(null) で初期値に戻す
+  getSettings: () => ipcRenderer.invoke("exhibit-settings-get"),
+  setSettings: (values) => ipcRenderer.invoke("exhibit-settings-set", values),
 });

@@ -3,6 +3,7 @@
 // (次の予定まであと何分)だけになる。黒子の作業(tasks/)なら、展示の画面の中にその作業を出す。
 // どれにするかは、スタッフが Ctrl+Alt+Shift+T で次の回のぶんを切り替える(最初は config.workMode で決まる)
 const config = window.EXHIBITION_CONFIG;
+
 const tasks = config.taskIds
   .map((id) => window.EXHIBITION_TASKS.find((task) => task.id === id))
   .filter(Boolean);
@@ -27,6 +28,17 @@ const WIDGET_SIZES = {
 const launcher = document.querySelector("#launcher");
 const startButton = document.querySelector("#startButton");
 const staffNote = document.querySelector("#staffNote");
+const mailNote = document.querySelector("#mailNote");
+const settingsPanel = document.querySelector("#settingsPanel");
+const settingsForm = document.querySelector("#settingsForm");
+const workSelect = document.querySelector("#workSelect");
+const settingsOutputs = {
+  minLeadSeconds: [document.querySelector("#minLeadOutput"), (v) => `${v}〜${v + 60}秒後`],
+  gmailInitialCount: [document.querySelector("#gmailInitialCountOutput"), (v) => `${v}通`],
+  gmailMailsPerMinute: [document.querySelector("#gmailMailsPerMinuteOutput"), (v) => (v === 0 ? "届かない" : `1分に${v}通`)],
+  inboxInitialCount: [document.querySelector("#inboxInitialCountOutput"), (v) => `${v}通`],
+  inboxMailsPerMinute: [document.querySelector("#inboxMailsPerMinuteOutput"), (v) => (v === 0 ? "届かない" : `1分に${v}通`)],
+};
 const widget = document.querySelector("#widget");
 const widgetText = document.querySelector("#widgetText");
 const widgetButton = document.querySelector("#widgetButton");
@@ -54,7 +66,32 @@ const session = {
   timers: [],
   nextEventTimer: null,
   toastTimer: null,
+  // 展示用Gmailへのメールを届けている最中か
+  mailActive: false,
 };
+
+// 実際のアプリで作業する回は、「はじめる」から100秒間(体験が先に終わればそこまで)、展示用Gmailにメールが届く(exhibition/mail/)
+function startMail() {
+  session.mailActive = true;
+  bridge?.mail({ action: "start" });
+}
+
+function stopMail() {
+  if (!session.mailActive) return;
+  session.mailActive = false;
+  bridge?.mail({ action: "stop" });
+}
+
+// スタッフ向け: 展示用Gmailが使えないとき(ログインしていない・Googleにつながらない)は、開始画面の隅に出しておく
+async function showMailStatus() {
+  const status = await bridge?.mailStatus();
+  if (!status?.enabled || status.ready) {
+    mailNote.classList.add("hidden");
+    return;
+  }
+  mailNote.textContent = status.error ? `展示用Gmailにメールを届けられません(${status.error})` : "展示用Gmailにログインしていません(メールは届きません)";
+  mailNote.classList.remove("hidden");
+}
 
 function timeLabel(ms) {
   const date = new Date(ms);
@@ -89,19 +126,97 @@ let currentWork = (() => {
   return workChoices.find((choice) => choice.id === saved) || fallback;
 })();
 
-// スタッフ用: 次の回の作業を順に切り替え、画面の隅に一瞬だけ名前を出す。体験の途中なら次の回から変わる
-function switchWork() {
-  currentWork = workChoices[(workChoices.indexOf(currentWork) + 1) % workChoices.length];
+// スタッフ向けの短いお知らせを、画面の隅に一瞬だけ出す
+function showStaffNote(text) {
+  staffNote.textContent = text;
+  staffNote.classList.add("show");
+  clearTimeout(showStaffNote.timer);
+  showStaffNote.timer = setTimeout(() => staffNote.classList.remove("show"), 2000);
+}
+
+// 次の回の作業を決めて、起動し直しても覚えておく。体験の途中なら次の回から変わる
+function setWork(choice) {
+  currentWork = choice;
   try {
     localStorage.setItem(WORK_STORAGE_KEY, currentWork.id);
   } catch {
     // 覚えておけなくても切り替え自体はできる
   }
-  staffNote.textContent = `次の作業: ${currentWork.title}`;
-  staffNote.classList.add("show");
-  clearTimeout(switchWork.timer);
-  switchWork.timer = setTimeout(() => staffNote.classList.remove("show"), 2000);
 }
+
+// スタッフ用: 次の回の作業を順に切り替え、画面の隅に一瞬だけ名前を出す
+function switchWork() {
+  setWork(workChoices[(workChoices.indexOf(currentWork) + 1) % workChoices.length]);
+  showStaffNote(`次の作業: ${currentWork.title}`);
+}
+
+// ---- スタッフ設定パネル(開始画面で Ctrl+Alt+Shift+P) ----
+
+// 保存されている設定(ゆっくリフレッシュの最短開始と、受信トレイの作業のメールの通数。展示用Gmailの値は main process が使う)。
+// 読めるまでは config.js の値
+let staffValues = {
+  minLeadSeconds: config.minLeadSeconds,
+  inboxInitialCount: config.inboxTask.initialCount,
+  inboxMailsPerMinute: config.inboxTask.mailsPerMinute,
+};
+bridge?.getSettings().then((settings) => {
+  staffValues = settings.values;
+});
+
+function fillSettingsForm({ values, fields }, work) {
+  Object.entries(fields).forEach(([key, { min, max, step }]) => {
+    const input = settingsForm.elements[key];
+    Object.assign(input, { min, max, step });
+    input.value = values[key];
+    renderSettingOutput(key);
+  });
+  workSelect.innerHTML = workChoices.map((choice) => `<option value="${choice.id}">${choice.title}</option>`).join("");
+  workSelect.value = work.id;
+}
+
+function renderSettingOutput(key) {
+  const [output, format] = settingsOutputs[key];
+  output.textContent = format(Number(settingsForm.elements[key].value));
+}
+
+async function openSettings() {
+  if (session.phase !== "launcher" || !bridge) return;
+  fillSettingsForm(await bridge.getSettings(), currentWork);
+  settingsPanel.classList.remove("hidden");
+  settingsForm.elements.minLeadSeconds.focus();
+}
+
+function closeSettings() {
+  settingsPanel.classList.add("hidden");
+  startButton.focus();
+}
+
+Object.keys(settingsOutputs).forEach((key) => {
+  settingsForm.elements[key].addEventListener("input", () => renderSettingOutput(key));
+});
+
+settingsForm.addEventListener("submit", async (event) => {
+  event.preventDefault();
+  const values = Object.fromEntries(Object.keys(settingsOutputs).map((key) => [key, Number(settingsForm.elements[key].value)]));
+  staffValues = (await bridge.setSettings(values)).values;
+  setWork(workChoices.find((choice) => choice.id === workSelect.value) || currentWork);
+  closeSettings();
+  showStaffNote("設定を保存しました");
+});
+
+// 初期値(config.js)に戻す。作業も、最初の設定(config.workMode)に戻す
+document.querySelector("#settingsReset").addEventListener("click", async () => {
+  const settings = await bridge.setSettings(null);
+  staffValues = settings.values;
+  setWork(config.workMode === "decoy" && tasks.length > 0 ? tasks[0] : OWN_WORK);
+  fillSettingsForm(settings, currentWork);
+  showStaffNote("初期値に戻しました");
+});
+
+document.querySelector("#settingsCancel").addEventListener("click", closeSettings);
+settingsPanel.addEventListener("keydown", (event) => {
+  if (event.key === "Escape") closeSettings();
+});
 
 startButton.addEventListener("click", () => startSession(currentWork === OWN_WORK ? null : currentWork));
 
@@ -114,10 +229,13 @@ function showLauncher() {
   }
   launcher.classList.remove("hidden");
   startButton.focus();
+  showMailStatus();
 }
 
 function resetSession() {
   clearSessionTimers();
+  settingsPanel.classList.add("hidden");
+  stopMail();
   session.phase = "launcher";
   session.task = null;
   // 前の回の予定が残っていると、体験していないときに差し込まれてしまうので消しておく
@@ -141,7 +259,7 @@ function scheduleSlow({ immediate = false } = {}) {
   const now = Date.now();
   const slowStartMs = immediate
     ? Math.floor(now / MINUTE) * MINUTE
-    : Math.ceil((now + config.minLeadSeconds * 1000) / MINUTE) * MINUTE;
+    : Math.ceil((now + staffValues.minLeadSeconds * 1000) / MINUTE) * MINUTE;
   const meetingStartMs = slowStartMs + 5 * MINUTE;
   session.meeting = { startMs: meetingStartMs, start: timeLabel(meetingStartMs) };
   bridge?.setMeeting({
@@ -174,7 +292,13 @@ function startSession(task) {
     desktop.classList.remove("hidden");
     windowTitle.textContent = task.windowTitle;
     workHint.textContent = task.hint;
-    taskFrame.src = `../tasks/${task.id}/index.html`;
+    // 受信トレイの作業のメールの通数とペース(スタッフ設定)。届くのをやめる時刻は、展示用Gmailと同じ決め方
+    const taskParams = new URLSearchParams({
+      initial: staffValues.inboxInitialCount,
+      rate: staffValues.inboxMailsPerMinute,
+      stopAfter: staffValues.minLeadSeconds + 60 + config.gmailDemo.stopAfterLatestStartSeconds,
+    });
+    taskFrame.src = `../tasks/${task.id}/index.html?${taskParams}`;
     taskFrame.addEventListener("load", () => taskFrame.contentWindow.focus(), { once: true });
     scheduleToast();
   } else {
@@ -183,6 +307,7 @@ function startSession(task) {
     widget.classList.remove("hidden");
     setWindowMode("widget", WIDGET_SIZES.next);
     bridge?.releaseFocus();
+    startMail();
   }
 
   scheduleSlow();
@@ -217,6 +342,7 @@ function leaveForMeeting() {
   if (session.phase !== "after") return;
   session.phase = "leaving";
   clearSessionTimers();
+  stopMail();
   if (!session.task) {
     showEndCard();
     return;
@@ -323,6 +449,7 @@ function showToast(title, body) {
 bridge?.onCommand((command) => {
   if (command === "reset") showLauncher();
   if (command === "next-task") switchWork();
+  if (command === "settings") openSettings();
   if (command === "trigger" && session.phase === "working") {
     clearSessionTimers();
     session.nextEventTimer = setInterval(renderNextEvent, 500);

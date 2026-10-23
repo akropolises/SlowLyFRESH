@@ -5,7 +5,7 @@ window.EXHIBITION_CONFIG = {
   workMode: "own",
   // 黒子の作業(tasks/registry.js のid)。Ctrl+Alt+Shift+T では、実際のアプリ → ここに挙げた順 → 実際のアプリ … と切り替わる
   taskIds: ["inbox", "tabs"],
-  // ゆっくリフレッシュは、「はじめる」からこの秒数以上あとの、いちばん近い分の区切りで差し込まれる
+  // ゆっくリフレッシュは、「はじめる」からこの秒数以上あとの、いちばん近い分の区切りで差し込まれる(スタッフ設定パネルで変えられる)
   // (20なら、押したときの秒が40以下で次の分、41以上でその次の分の区切り。押してから20〜80秒後)。次の予定は、その5分後になる
   minLeadSeconds: 20,
   // ゆっくリフレッシュが始まって(分の00秒)から、裏の表示を次の予定のリマインド(「向かう」)に切り替えるまでの秒数。
@@ -20,4 +20,27 @@ window.EXHIBITION_CONFIG = {
   meeting: { title: "定例ミーティング", duration: 60 },
   // 展示会場では成り立ちにくい体験(micro-slows.js のid)。展示の予定では選ばれない
   excludedSlowIds: ["hold-warm-object"],
+  // 黒子の作業「受信トレイ」に届くメール(スタッフ設定パネルで変えられる。展示用Gmailのメールとは別に設定する)
+  inboxTask: {
+    // 最初の未読の通数
+    initialCount: 23,
+    // 体験中に届く通数(1分あたり)。0なら届かない。23で、もとの黒子の作業と同じ平均2.6秒に1通(8通届いたあとは、ときどき続けてもう1通)。
+    // 届くのをやめるのは、展示用Gmailと同じく「minLeadSeconds + 60秒」の stopAfterLatestStartSeconds 秒あと
+    mailsPerMinute: 23,
+  },
+  // 「実際のアプリ」の回に、展示用のGmailへ届けるメール(exhibition/mail/)。Googleのログイン情報は config.js / config.local.js と同じものを使う
+  gmailDemo: {
+    enabled: true,
+    // 展示で入れたメールに付けるラベル(前の回のメールには手を付けず、受信トレイにそのまま残す)
+    label: "展示デモ",
+    // 「はじめる」の直後に入れる未読の通数(スタッフ設定パネルで変えられる)。前の回のメールより新しい日時にするので、一覧の上からこの通数はいつも未読になる
+    initialCount: 23,
+    // 体験中に届くメールの通数(1分あたり。スタッフ設定パネルで変えられる)。届く間隔はこの平均のまわりでばらつく。0なら届かない
+    mailsPerMinute: 5,
+    // メールが止まるのは、ゆっくリフレッシュがいちばん遅く始まる時刻(「はじめる」から minLeadSeconds + 60秒)の、この秒数あと
+    // (minLeadSeconds が20なら、「はじめる」から100秒で止まる)
+    stopAfterLatestStartSeconds: 20,
+    // 直近のこの通数の中では、同じ系統(同じ会社・同じ種類の依頼)のメールを重ねない
+    recentWindow: 30,
+  },
 };

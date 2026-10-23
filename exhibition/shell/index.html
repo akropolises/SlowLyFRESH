@@ -16,6 +16,54 @@
 
     <!-- スタッフが作業を切り替えたときだけ、画面の隅に一瞬出る -->
     <p class="staff-note" id="staffNote"></p>
+    <!-- スタッフ設定パネル。開始画面で Ctrl+Alt+Shift+P を押したときだけ出る -->
+    <section class="settings hidden" id="settingsPanel">
+      <form class="settings-card" id="settingsForm">
+        <h2>スタッフ設定</h2>
+        <p class="settings-group">共通</p>
+        <label class="setting">
+          <span class="setting-name">ゆっくリフレッシュの開始</span>
+          <input type="range" name="minLeadSeconds">
+          <output id="minLeadOutput"></output>
+        </label>
+        <label class="setting">
+          <span class="setting-name">次の回の作業</span>
+          <select name="work" id="workSelect"></select>
+        </label>
+        <p class="settings-group">実際のアプリ(展示用Gmail)</p>
+        <label class="setting">
+          <span class="setting-name">最初の未読メール</span>
+          <input type="range" name="gmailInitialCount">
+          <output id="gmailInitialCountOutput"></output>
+        </label>
+        <label class="setting">
+          <span class="setting-name">体験中に届くメール</span>
+          <input type="range" name="gmailMailsPerMinute">
+          <output id="gmailMailsPerMinuteOutput"></output>
+        </label>
+        <p class="settings-group">受信トレイ(黒子の作業)</p>
+        <label class="setting">
+          <span class="setting-name">最初の未読メール</span>
+          <input type="range" name="inboxInitialCount">
+          <output id="inboxInitialCountOutput"></output>
+        </label>
+        <label class="setting">
+          <span class="setting-name">体験中に届くメール</span>
+          <input type="range" name="inboxMailsPerMinute">
+          <output id="inboxMailsPerMinuteOutput"></output>
+        </label>
+        <p class="settings-note">保存した値は、起動し直しても残ります。体験の途中で変えたときは、次の回から使われます。</p>
+        <div class="settings-buttons">
+          <button type="button" id="settingsReset">初期値に戻す</button>
+          <span class="settings-spacer"></span>
+          <button type="button" id="settingsCancel">閉じる</button>
+          <button type="submit" class="primary">保存して閉じる</button>
+        </div>
+      </form>
+    </section>
+
+    <!-- 展示用Gmailが使えないときだけ、開始画面の隅に出る(スタッフ向け) -->
+    <p class="mail-note hidden" id="mailNote"></p>
 
     <!-- 体験中の小さな表示。体験者は実際のアプリで作業し、展示の画面は画面の左下にこれだけを残す -->
     <section class="widget hidden" id="widget">
@@ -25,7 +73,7 @@
       </div>
     </section>
 
-    <!-- 黒子の作業モード(config.js の workMode が "decoy")のときの作業画面 -->
+    <!-- 黒子の作業(受信トレイなど)の回の作業画面 -->
     <section class="desktop hidden" id="desktop">
       <div class="work-window" id="workWindow">
         <div class="window-bar">

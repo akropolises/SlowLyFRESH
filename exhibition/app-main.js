@@ -29,5 +29,7 @@ if (!app.requestSingleInstanceLock()) {
     setExhibitionEvent: (event) => realWindow?.webContents.send("exhibition-event", event),
     // 予定5分前の判定を満たしていれば、アプリの定期判定を待たずにすぐ始めさせる(通常版にもある口)
     triggerSlow: (eventId) => realWindow?.webContents.send("electron-start-slow", eventId),
+    // 本物のアプリのウィンドウ。ゆっくリフレッシュ中だけ表示される(展示の画面が、その間は前に出ないようにするため)
+    window: () => realWindow,
   });
 }
