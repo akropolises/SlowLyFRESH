@@ -13,8 +13,13 @@ const googleTokenUrl = "https://oauth2.googleapis.com/token";
 const googleCalendarEventsUrl = "https://www.googleapis.com/calendar/v3/calendars";
 const googleCalendarListUrl = "https://www.googleapis.com/calendar/v3/users/me/calendarList";
 const appIconPath = path.join(__dirname, "assets", "tray-icon.png");
+// PC起動時の自動起動で付ける引数。この引数で起動したときはウィンドウを出さず、トレイに常駐する
+const loginItemArgs = ["--hidden"];
+// 自動起動を登録するのは、配布版をそのまま起動したときだけ(開発中の electron . では electron.exe 自体を登録してしまい、
+// 展示版のように別の入口から読み込まれたときは、その実行ファイルを登録してしまうため)
+const canOpenAtLogin = app.isPackaged && require.main === module;
 
-function createWindow() {
+function createWindow({ hidden = false } = {}) {
   mainWindow = new BrowserWindow({
     width: 420,
     height: 760,
@@ -33,7 +38,9 @@ function createWindow() {
 
   mainWindow.loadFile(path.join(__dirname, "index.html"));
   mainWindow.once("ready-to-show", () => {
-    mainWindow.show();
+    if (!hidden) {
+      mainWindow.show();
+    }
   });
   mainWindow.on("close", (event) => {
     if (!app.isQuitting) {
@@ -50,6 +57,16 @@ function createTray() {
   tray.setContextMenu(
     Menu.buildFromTemplate([
       { label: "ゆっくリフレッシュを開く", click: showMainWindow },
+      ...(canOpenAtLogin
+        ? [
+            {
+              label: "PCの起動時に自動で起動",
+              type: "checkbox",
+              checked: readOpenAtLogin(),
+              click: (item) => setOpenAtLogin(item.checked),
+            },
+          ]
+        : []),
       {
         label: "終了",
         click: () => {
@@ -124,6 +141,35 @@ function leaveSlowMode() {
     mainWindow.hide();
     mainWindow.setOpacity(1);
   });
+}
+
+function getStartupSettingsPath() {
+  return path.join(app.getPath("userData"), "startup-settings.json");
+}
+
+// 自動起動するか(初期値はする)。トレイのメニューで切り替えた値を保存しておき、起動のたびにOSへ登録し直す
+function readOpenAtLogin() {
+  try {
+    return JSON.parse(fs.readFileSync(getStartupSettingsPath(), "utf8")).openAtLogin !== false;
+  } catch {
+    return true;
+  }
+}
+
+function applyOpenAtLogin(openAtLogin) {
+  if (!canOpenAtLogin) return;
+  app.setLoginItemSettings({ openAtLogin, args: loginItemArgs });
+}
+
+function setOpenAtLogin(openAtLogin) {
+  fs.mkdirSync(path.dirname(getStartupSettingsPath()), { recursive: true });
+  fs.writeFileSync(getStartupSettingsPath(), JSON.stringify({ openAtLogin }, null, 2));
+  applyOpenAtLogin(openAtLogin);
+}
+
+function wasOpenedAtLogin() {
+  // Windows は登録した引数で、macOS はOSが教える値で見分ける
+  return process.argv.includes(loginItemArgs[0]) || app.getLoginItemSettings().wasOpenedAtLogin === true;
 }
 
 function clearReminderTimers() {
@@ -520,11 +566,9 @@ ipcMain.handle("clear-google-auth", () => {
 });
 
 app.whenReady().then(() => {
-  createWindow();
+  createWindow({ hidden: canOpenAtLogin && wasOpenedAtLogin() });
   createTray();
-  app.setLoginItemSettings({
-    openAtLogin: false,
-  });
+  applyOpenAtLogin(readOpenAtLogin());
 
   app.on("activate", () => {
     if (BrowserWindow.getAllWindows().length === 0) {
