@@ -10,6 +10,9 @@ const FIELDS = {
   // 実際のアプリ: 「はじめる」の直後に展示用Gmailへ入れる未読メールの通数と、体験中に届く通数(1分あたり。0なら届かない)
   gmailInitialCount: { min: 0, max: 50, step: 1, default: (config) => config.gmailDemo.initialCount },
   gmailMailsPerMinute: { min: 0, max: 30, step: 1, default: (config) => config.gmailDemo.mailsPerMinute },
+  // 実際のアプリ: 「はじめる」で、前の回の展示メールをゴミ箱へ移すか / 受信トレイの直近のメールを未読に戻すか(オン・オフ)
+  gmailClearInbox: { type: "boolean", default: (config) => config.gmailDemo.clearInboxOnStart },
+  gmailMarkRecentUnread: { type: "boolean", default: (config) => config.gmailDemo.markRecentUnreadOnStart },
   // 受信トレイ: 最初の未読メールの通数と、体験中に届く通数(1分あたり。0なら届かない)
   inboxInitialCount: { min: 0, max: 50, step: 1, default: (config) => config.inboxTask.initialCount },
   inboxMailsPerMinute: { min: 0, max: 30, step: 1, default: (config) => config.inboxTask.mailsPerMinute },
@@ -18,6 +21,7 @@ const FIELDS = {
 const LEGACY_NAMES = { initialCount: "gmailInitialCount", mailsPerMinute: "gmailMailsPerMinute" };
 
 const clamp = (value, { min, max, step }) => Math.min(max, Math.max(min, Math.round((Number(value) - min) / step) * step + min));
+const isBoolean = (field) => field.type === "boolean";
 
 class StaffSettings {
   constructor(userDataDir, config) {
@@ -38,6 +42,7 @@ class StaffSettings {
   normalize(values) {
     return Object.fromEntries(
       Object.entries(FIELDS).map(([key, field]) => {
+        if (isBoolean(field)) return [key, typeof values[key] === "boolean" ? values[key] : Boolean(this.defaults[key])];
         const value = Number(values[key]);
         return [key, Number.isFinite(value) ? clamp(value, field) : this.defaults[key]];
       })
@@ -45,7 +50,9 @@ class StaffSettings {
   }
 
   describe() {
-    const fields = Object.fromEntries(Object.entries(FIELDS).map(([key, { min, max, step }]) => [key, { min, max, step }]));
+    const fields = Object.fromEntries(
+      Object.entries(FIELDS).map(([key, field]) => [key, isBoolean(field) ? { type: "boolean" } : { min: field.min, max: field.max, step: field.step }])
+    );
     return { values: this.values, defaults: this.defaults, fields };
   }
 

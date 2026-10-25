@@ -179,18 +179,35 @@ function start(realApp) {
     ipcMain.handle("exhibit-set-meeting", (_event, meeting) => realApp.setExhibitionEvent(meeting));
     ipcMain.handle("exhibit-trigger-slow", (_event, eventId) => realApp.triggerSlow(eventId));
 
+    // 次の体験者のための展示用Gmailの準備(初期化・最初の未読・未読に戻す)。「はじめる」で遅れないよう、体験の終わりに行う
+    const prepareOptions = () => ({
+      initialCount: staffSettings.values.gmailInitialCount,
+      clearInbox: staffSettings.values.gmailClearInbox,
+      markRecentUnread: staffSettings.values.gmailMarkRecentUnread,
+      recentUnreadCount: configs.EXHIBITION_CONFIG.gmailDemo.recentUnreadCount,
+    });
+    // 初めて使うときや、前の体験のあと準備する前に終了していたときは、ここで準備しておく
+    gmailDemo?.prepareIfNeeded(prepareOptions());
+
     ipcMain.handle("exhibit-settings-get", () => staffSettings.describe());
+    // パネルで変えた準備の値は、次に体験が終わったときの準備から使う
     ipcMain.handle("exhibit-settings-set", (_event, values) => staffSettings.update(values));
 
-    // 体験中に、展示用のGmailへメールを届ける。メールが止まるのは、ゆっくリフレッシュがいちばん遅く始まる時刻(最短開始+60秒)の少しあと
+    // 体験中に、展示用のGmailへメールを届ける。メールが止まるのは、ゆっくリフレッシュがいちばん遅く始まる時刻(最短開始+60秒)の少しあと。
+    // 体験が終わったら(stop)、次の体験者のための準備をする
     ipcMain.handle("exhibit-mail", (_event, { action }) => {
       if (!gmailDemo) return { ok: false, error: "not configured" };
       if (action === "start") {
-        const { minLeadSeconds, gmailInitialCount, gmailMailsPerMinute } = staffSettings.values;
-        const streamSeconds = minLeadSeconds + 60 + configs.EXHIBITION_CONFIG.gmailDemo.stopAfterLatestStartSeconds;
-        gmailDemo.start({ initialCount: gmailInitialCount, mailsPerMinute: gmailMailsPerMinute, streamSeconds });
+        const { minLeadSeconds, gmailMailsPerMinute } = staffSettings.values;
+        gmailDemo.start({
+          mailsPerMinute: gmailMailsPerMinute,
+          streamSeconds: minLeadSeconds + 60 + configs.EXHIBITION_CONFIG.gmailDemo.stopAfterLatestStartSeconds,
+        });
       }
-      if (action === "stop") gmailDemo.stop();
+      if (action === "stop") {
+        gmailDemo.stop();
+        gmailDemo.prepareNext(prepareOptions());
+      }
       return { ok: true };
     });
     ipcMain.handle("exhibit-mail-status", () => (gmailDemo ? { enabled: true, ...gmailDemo.status() } : { enabled: false }));

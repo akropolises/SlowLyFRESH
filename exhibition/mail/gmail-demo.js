@@ -1,5 +1,6 @@
 // 展示用Gmailの受信トレイに、体験中だけメールを次々と届ける。
-// メールは送信せず、Gmail API で受信トレイに直接入れる(messages.insert)。送信数の上限にはかからず、受信トレイも読まない。
+// メールは送信せず、Gmail API で受信トレイに直接入れる(messages.insert)。送信数の上限にはかからない。
+// スタッフ設定によっては、はじめに前の回の展示メールをゴミ箱へ移したり、受信トレイの直近のメールを未読に戻したりする。
 // ログインは本物のアプリ(カレンダー)とは別に持ち、展示版の保存場所に置く。
 const fs = require("fs");
 const path = require("path");
@@ -7,10 +8,13 @@ const http = require("http");
 const crypto = require("crypto");
 const { createPicker, buildRawMail, randomBetween } = require("./compose");
 
-// メールを入れる・ラベルを作る権限と、自分のアドレスを知るための権限だけ。受信トレイを読む権限は求めない
+// メールを入れる・ラベルを作る権限、受信トレイのメールを一覧してゴミ箱へ移したり未読に戻したりする権限(gmail.modify)、
+// 自分のアドレスを知るための権限。メールを完全に削除する権限(https://mail.google.com/)は求めない
+const MODIFY_SCOPE = "https://www.googleapis.com/auth/gmail.modify";
 const SCOPES = [
   "https://www.googleapis.com/auth/gmail.insert",
   "https://www.googleapis.com/auth/gmail.labels",
+  MODIFY_SCOPE,
   "openid",
   "email",
 ];
@@ -32,7 +36,7 @@ class GmailDemo {
     this.labelId = null;
     this.session = null;
     this.lastError = null;
-    // state: { tokens, email, lastMailAt, lastEndAt }
+    // state: { tokens, email, lastMailAt, lastEndAt, prepared(次の体験の準備ができているか) }
     try {
       this.state = JSON.parse(fs.readFileSync(this.statePath, "utf8"));
     } catch {
@@ -45,8 +49,10 @@ class GmailDemo {
     fs.writeFileSync(this.statePath, JSON.stringify(this.state, null, 2));
   }
 
+  // gmail.modify を足す前のログインは、権限が足りないので、ログインし直してもらう
   hasLogin() {
-    return Boolean(this.state.tokens?.refresh_token && this.state.email);
+    const tokens = this.state.tokens;
+    return Boolean(tokens?.refresh_token && this.state.email && (tokens.scope || "").split(" ").includes(MODIFY_SCOPE));
   }
 
   status() {
@@ -166,6 +172,26 @@ class GmailDemo {
     return this.labelId;
   }
 
+  // 前の回の展示メールを、スレッドごと(体験者の返信もまとめて)ゴミ箱へ移す。ゴミ箱からは30日で消える
+  async clearDemoMails() {
+    const labelId = await this.ensureLabel();
+    for (;;) {
+      const { threads = [] } = await this.gmail("GET", `/threads?labelIds=${labelId}&maxResults=100`);
+      if (threads.length === 0) return;
+      for (let i = 0; i < threads.length; i += 10) {
+        await Promise.all(threads.slice(i, i + 10).map((thread) => this.gmail("POST", `/threads/${thread.id}/trash`)));
+      }
+    }
+  }
+
+  // 受信トレイの新しいほうから count 通を未読にする(展示のメールかどうかは問わない)
+  async markRecentUnread(count) {
+    if (count <= 0) return;
+    const { messages = [] } = await this.gmail("GET", `/messages?labelIds=INBOX&maxResults=${count}`);
+    if (messages.length === 0) return;
+    await this.gmail("POST", "/messages/batchModify", { ids: messages.map((message) => message.id), addLabelIds: ["UNREAD"] });
+  }
+
   async insertMail(template, date) {
     await this.gmail("POST", "/messages?internalDateSource=dateHeader", {
       raw: buildRawMail(template, date, this.state.email),
@@ -176,24 +202,67 @@ class GmailDemo {
 
   // ---- 1回の体験 ----
 
-  // 最初に未読を initialCount 通、古いものから順に入れ、そのまま「始まりから streamSeconds 秒」まで、1分に mailsPerMinute 通のペースで届け続ける。
-  // 最初の未読は前の回のメールより新しい日時にするので、受信トレイの上から initialCount 通はいつも未読になる
-  async start({ initialCount, mailsPerMinute, streamSeconds }) {
+  // 受信トレイでいちばん新しいメールの日時(なければ0)
+  async newestInboxTime() {
+    const { messages = [] } = await this.gmail("GET", "/messages?labelIds=INBOX&maxResults=1");
+    if (messages.length === 0) return 0;
+    const message = await this.gmail("GET", `/messages/${messages[0].id}?format=minimal`);
+    return Number(message.internalDate) || 0;
+  }
+
+  // 次の体験者のための準備。体験の終わりに(初めて使うときは起動時に)行い、「はじめる」ではメールを届けることだけをする。
+  // clearInbox なら、まず前の回の展示メールをゴミ箱へ移す。
+  // 次に未読を initialCount 通、古いものから順に入れる(受信トレイのどのメールよりも新しい日時にするので、受信トレイの上から initialCount 通は未読)。
+  // markRecentUnread なら、そのあと受信トレイの新しいほうから recentUnreadCount 通を未読にする。
+  // 準備が重なったときは、前の準備が終わってから順に行う
+  prepareNext(options) {
+    this.preparing = (this.preparing || Promise.resolve()).then(() => this.runPrepare(options));
+    return this.preparing;
+  }
+
+  async runPrepare({ initialCount, clearInbox = false, markRecentUnread = false, recentUnreadCount = 25 }) {
+    if (!this.hasLogin()) return;
+    try {
+      if (clearInbox) await this.clearDemoMails();
+      // 準備のメールと、次の体験で届くメールで、系統が重ならないよう同じ選び方を使い続ける
+      this.picker = createPicker(this.settings.recentWindow);
+      const now = Date.now();
+      const floor = Math.max((await this.newestInboxTime()) + 1000, now - 60 * 60000);
+      // 直前の準備から間がないときは、前の準備より新しくなるよう1通1秒ずつ先へずらす
+      const end = Math.max(now, floor + initialCount * 1000);
+      const offsets = Array.from({ length: initialCount }, () => Math.random()).sort((a, b) => a - b);
+      for (const offset of offsets) {
+        await this.insertMail(this.picker(), new Date(floor + offset * (end - floor)));
+      }
+      if (markRecentUnread) await this.markRecentUnread(recentUnreadCount);
+      this.state.prepared = true;
+      this.lastError = null;
+    } catch (error) {
+      this.lastError = error.message;
+      console.error("展示用Gmailの準備ができませんでした:", error.message);
+    } finally {
+      this.saveState();
+    }
+  }
+
+  // 準備がまだなら(前の体験のあと準備する前にアプリを終えたなど)、準備する
+  prepareIfNeeded(options) {
+    if (this.hasLogin() && !this.state.prepared) return this.prepareNext(options);
+    return Promise.resolve();
+  }
+
+  // 「はじめる」から streamSeconds 秒まで、1分に mailsPerMinute 通のペースで届け続ける(最初の未読は、準備で入れてある)
+  async start({ mailsPerMinute, streamSeconds }) {
     if (!this.hasLogin()) return;
     const session = {};
     this.session = session;
     const isCurrent = () => this.session === session;
-    const pickTemplate = createPicker(this.settings.recentWindow);
+    const pickTemplate = this.picker || createPicker(this.settings.recentWindow);
     const startedAt = Date.now();
+    this.state.prepared = false;
+    this.saveState();
 
     try {
-      const floor = Math.max((this.state.lastMailAt || 0) + 1000, (this.state.lastEndAt || 0) + 1000, startedAt - 60 * 60000);
-      const offsets = Array.from({ length: initialCount }, () => Math.random()).sort((a, b) => a - b);
-      for (const offset of offsets) {
-        if (!isCurrent()) return;
-        await this.insertMail(pickTemplate(), new Date(Math.min(floor + offset * (startedAt - floor), startedAt)));
-      }
-
       // 届く間隔は平均(60秒 / 1分あたりの通数)の 0.7〜1.3倍でばらつかせる。0通なら、ここでは何も届けない
       const until = startedAt + streamSeconds * 1000;
       const meanSeconds = mailsPerMinute > 0 ? 60 / mailsPerMinute : 0;

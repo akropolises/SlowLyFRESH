@@ -164,12 +164,17 @@ bridge?.getSettings().then((settings) => {
 });
 
 function fillSettingsForm({ values, fields }, work) {
-  Object.entries(fields).forEach(([key, { min, max, step }]) => {
+  Object.entries(fields).forEach(([key, field]) => {
     const input = settingsForm.elements[key];
-    Object.assign(input, { min, max, step });
+    if (field.type === "boolean") {
+      input.checked = values[key];
+      return;
+    }
+    Object.assign(input, { min: field.min, max: field.max, step: field.step });
     input.value = values[key];
     renderSettingOutput(key);
   });
+  document.querySelector("#recentUnreadCount").textContent = config.gmailDemo.recentUnreadCount;
   workSelect.innerHTML = workChoices.map((choice) => `<option value="${choice.id}">${choice.title}</option>`).join("");
   workSelect.value = work.id;
 }
@@ -197,7 +202,11 @@ Object.keys(settingsOutputs).forEach((key) => {
 
 settingsForm.addEventListener("submit", async (event) => {
   event.preventDefault();
-  const values = Object.fromEntries(Object.keys(settingsOutputs).map((key) => [key, Number(settingsForm.elements[key].value)]));
+  const values = {
+    ...Object.fromEntries(Object.keys(settingsOutputs).map((key) => [key, Number(settingsForm.elements[key].value)])),
+    gmailClearInbox: settingsForm.elements.gmailClearInbox.checked,
+    gmailMarkRecentUnread: settingsForm.elements.gmailMarkRecentUnread.checked,
+  };
   staffValues = (await bridge.setSettings(values)).values;
   setWork(workChoices.find((choice) => choice.id === workSelect.value) || currentWork);
   closeSettings();

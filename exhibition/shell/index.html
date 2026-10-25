@@ -41,6 +41,14 @@
           <input type="range" name="gmailMailsPerMinute">
           <output id="gmailMailsPerMinuteOutput"></output>
         </label>
+        <label class="setting setting-check">
+          <span class="setting-name">受信トレイを初期化</span>
+          <span class="setting-check-body"><input type="checkbox" name="gmailClearInbox"><span>はじめに、前の回の展示メールをゴミ箱へ移す</span></span>
+        </label>
+        <label class="setting setting-check">
+          <span class="setting-name">未読に戻す</span>
+          <span class="setting-check-body"><input type="checkbox" name="gmailMarkRecentUnread"><span>はじめに、受信トレイの直近<span id="recentUnreadCount"></span>通を未読にする</span></span>
+        </label>
         <p class="settings-group">受信トレイ(黒子の作業)</p>
         <label class="setting">
           <span class="setting-name">最初の未読メール</span>
