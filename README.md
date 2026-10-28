@@ -49,7 +49,7 @@ window.MICRO_SLOW_CONFIG.googleClientSecret = "YOUR_DESKTOP_OAUTH_CLIENT_SECRET"
 
 Client SecretはGitにコミットしません。
 
-現在の実装は読み取り専用です。予定の作成・編集は行わず、`calendar.readonly` スコープで当日の予定だけを読み込みます。OAuth tokenはElectronのuserDataディレクトリに保存され、プロジェクトフォルダには保存されません。
+現在の実装は読み取り専用です。予定の作成・編集は行わず、`calendar.calendarlist.readonly`(カレンダー一覧)と `calendar.events.readonly`(予定)の2つの読み取り専用スコープだけを使い、当日の予定を読み込みます。OAuth tokenはElectronのuserDataディレクトリに保存され、プロジェクトフォルダには保存されません。
 
 ## 現在の実装
 
@@ -161,7 +161,7 @@ Google OAuth Client SecretはGitにコミットしません。リポジトリは
 
 ## 一般公開とGoogleの審査
 
-一般公開するには、Google CloudのOAuth同意画面を「本番」にし、Googleの審査を受けます。`calendar.readonly` は機密性の高いスコープのため、審査を通すまでは「確認されていないアプリ」の警告が出て、新規ユーザーは100人までに制限されます。
+一般公開するには、Google CloudのOAuth同意画面を「本番」にし、Googleの審査を受けます。`calendar.events.readonly` は機密性の高いスコープのため(`calendar.calendarlist.readonly` は非機密)、審査を通すまでは「確認されていないアプリ」の警告が出て、新規ユーザーは100人までに制限されます。
 
 審査で求められるホームページとプライバシーポリシーは、`docs/` に置いてGitHub Pagesで公開します。
 

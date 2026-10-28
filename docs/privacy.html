@@ -11,7 +11,7 @@
       <header>
         <p class="eyebrow"><a href="index.html">ゆっくリフレッシュ</a></p>
         <h1>プライバシーポリシー</h1>
-        <p class="lead">最終更新日: 2026年10月11日</p>
+        <p class="lead">最終更新日: 2026年10月25日</p>
         <nav>
           <a href="#ja">日本語</a>
           <a href="#en">English</a>
@@ -23,7 +23,12 @@
         <p>このプライバシーポリシーは、デスクトップアプリ「ゆっくリフレッシュ」(以下「本アプリ」)が、利用者の情報をどのように扱うかを説明するものです。</p>
 
         <h2>2. Googleから受け取る情報</h2>
-        <p>利用者がGoogle Calendarとの連携を選んだ場合に限り、本アプリはGoogleのOAuthを通じて、読み取り専用の権限(<code>https://www.googleapis.com/auth/calendar.readonly</code>)を求めます。</p>
+        <p>利用者がGoogle Calendarとの連携を選んだ場合に限り、本アプリはGoogleのOAuthを通じて、次の2つの読み取り専用の権限だけを求めます。</p>
+        <ul>
+          <li><code>https://www.googleapis.com/auth/calendar.calendarlist.readonly</code>: 表示中のカレンダーの一覧を読み取るため</li>
+          <li><code>https://www.googleapis.com/auth/calendar.events.readonly</code>: そのカレンダーの予定を読み取るため</li>
+        </ul>
+        <p>これらの権限で、本アプリは次の情報を読み取ります。</p>
         <ul>
           <li>表示中のカレンダーの一覧から、カレンダーのIDと名前を読み取ります。</li>
           <li>当日の予定から、予定のID、タイトル、開始時刻、終了時刻を読み取ります。</li>
@@ -66,13 +71,18 @@
 
       <section id="en" lang="en">
         <h2>Privacy Policy (English)</h2>
-        <p>Last updated: October 11, 2026</p>
+        <p>Last updated: October 25, 2026</p>
 
         <h3>1. About this policy</h3>
-        <p>This policy explains how the desktop app ゆっくリフレッシュ (Yukkuri Refresh, "the App") handles user information.</p>
+        <p>This policy explains how the desktop app ゆっくリフレッシュ (SlowLyFRESH, "the App") handles user information.</p>
 
         <h3>2. Information received from Google</h3>
-        <p>Only when you choose to connect Google Calendar, the App requests read-only access through Google OAuth (<code>https://www.googleapis.com/auth/calendar.readonly</code>).</p>
+        <p>Only when you choose to connect Google Calendar, the App requests only the following two read-only scopes through Google OAuth.</p>
+        <ul>
+          <li><code>https://www.googleapis.com/auth/calendar.calendarlist.readonly</code>: to read the list of your visible calendars</li>
+          <li><code>https://www.googleapis.com/auth/calendar.events.readonly</code>: to read events in those calendars</li>
+        </ul>
+        <p>With these scopes, the App reads the following information.
         <ul>
           <li>From your list of visible calendars, the App reads each calendar's ID and name.</li>
           <li>From today's events, the App reads each event's ID, title, start time, and end time.</li>

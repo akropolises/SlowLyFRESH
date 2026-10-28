@@ -7,7 +7,11 @@ const { app, BrowserWindow, ipcMain, Tray, Menu, nativeImage, shell } = require(
 let mainWindow = null;
 let tray = null;
 const reminderTimers = new Map();
-const googleCalendarScope = "https://www.googleapis.com/auth/calendar.readonly";
+// 必要最小限の読み取り権限だけを求める(表示中のカレンダーの一覧と、その予定の読み取り)
+const googleCalendarScopes = [
+  "https://www.googleapis.com/auth/calendar.calendarlist.readonly",
+  "https://www.googleapis.com/auth/calendar.events.readonly",
+];
 const googleAuthUrl = "https://accounts.google.com/o/oauth2/v2/auth";
 const googleTokenUrl = "https://oauth2.googleapis.com/token";
 const googleCalendarEventsUrl = "https://www.googleapis.com/calendar/v3/calendars";
@@ -365,7 +369,7 @@ async function authorizeGoogle(clientId, clientSecret) {
     client_id: clientId,
     redirect_uri: redirectUri,
     response_type: "code",
-    scope: googleCalendarScope,
+    scope: googleCalendarScopes.join(" "),
     access_type: "offline",
     prompt: "consent",
     code_challenge: challenge,
