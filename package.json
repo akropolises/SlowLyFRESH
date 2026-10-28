@@ -10,6 +10,7 @@
     "package": "electron-forge package",
     "make": "electron-forge make",
     "make:local": "node scripts/make-with-local-config.js",
+    "make:public": "node scripts/make-public.js",
     "check": "node --check app.js && node --check micro-slows.js && node --check electron-main.js && node --check electron-preload.js"
   },
   "devDependencies": {

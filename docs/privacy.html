@@ -1,0 +1,130 @@
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>プライバシーポリシー | ゆっくリフレッシュ</title>
+    <link rel="stylesheet" href="style.css">
+  </head>
+  <body>
+    <main>
+      <header>
+        <p class="eyebrow"><a href="index.html">ゆっくリフレッシュ</a></p>
+        <h1>プライバシーポリシー</h1>
+        <p class="lead">最終更新日: 2026年10月25日</p>
+        <nav>
+          <a href="#ja">日本語</a>
+          <a href="#en">English</a>
+        </nav>
+      </header>
+
+      <section id="ja">
+        <h2>1. このポリシーについて</h2>
+        <p>このプライバシーポリシーは、デスクトップアプリ「ゆっくリフレッシュ」(以下「本アプリ」)が、利用者の情報をどのように扱うかを説明するものです。</p>
+
+        <h2>2. Googleから受け取る情報</h2>
+        <p>利用者がGoogle Calendarとの連携を選んだ場合に限り、本アプリはGoogleのOAuthを通じて、次の2つの読み取り専用の権限だけを求めます。</p>
+        <ul>
+          <li><code>https://www.googleapis.com/auth/calendar.calendarlist.readonly</code>: 表示中のカレンダーの一覧を読み取るため</li>
+          <li><code>https://www.googleapis.com/auth/calendar.events.readonly</code>: そのカレンダーの予定を読み取るため</li>
+        </ul>
+        <p>これらの権限で、本アプリは次の情報を読み取ります。</p>
+        <ul>
+          <li>表示中のカレンダーの一覧から、カレンダーのIDと名前を読み取ります。</li>
+          <li>当日の予定から、予定のID、タイトル、開始時刻、終了時刻を読み取ります。</li>
+        </ul>
+        <p>予定の説明、場所、参加者などの情報は使用しません。本アプリはGoogle Calendarへの予定の作成、編集、削除を行いません。</p>
+
+        <h2>3. 情報の使い方</h2>
+        <p>読み取った予定は、次の目的にだけ使います。</p>
+        <ul>
+          <li>アプリ内に今日の予定を表示すること。</li>
+          <li>予定の5分前に、ゆっくリフレッシュを開始するタイミングを決めること。</li>
+        </ul>
+        <p>広告、分析、機械学習の学習、その他上記以外の目的には使いません。</p>
+
+        <h2>4. 情報の保存場所と共有</h2>
+        <ul>
+          <li>読み取った予定と、Googleの認証情報(アクセストークン、リフレッシュトークン)は、利用者の端末の中にだけ保存します。</li>
+          <li>本アプリは開発者のサーバーを持たず、Googleから受け取った情報を開発者や第三者に送信、販売、共有することはありません。</li>
+          <li>本アプリの通信先は、認証と予定の読み取りのためのGoogleのサーバーだけです。</li>
+        </ul>
+        <p>このほか、ゆっくリフレッシュのあとに選んだ色の記録なども端末の中にだけ保存されます。これらはGoogleから受け取る情報ではありません。</p>
+
+        <h2>5. 保存期間と削除</h2>
+        <ul>
+          <li>予定は同期のたびに当日の内容へ置き換わります。</li>
+          <li>アプリ内の「Google連携を解除」を選ぶと、Google側の許可を取り消し、端末に保存した認証情報とGoogleから読み込んだ予定を削除します。</li>
+          <li>Googleアカウントの<a href="https://myaccount.google.com/connections">サードパーティ製のアプリとサービス</a>からも、いつでも許可を取り消せます。</li>
+          <li>アプリを削除し、アプリのデータフォルダ(Windowsでは <code>%APPDATA%\micro-slow</code>)を削除すると、端末に保存したすべての情報が消えます。</li>
+        </ul>
+
+        <h2>6. Google API Services User Data Policy への準拠</h2>
+        <p>本アプリによるGoogle APIから受け取った情報の利用と他のアプリへの転送は、<a href="https://developers.google.com/terms/api-services-user-data-policy">Google API Services User Data Policy</a>(Limited Useの要件を含む)に従います。</p>
+
+        <h2>7. 変更</h2>
+        <p>このポリシーを変更する場合は、このページを更新し、最終更新日を改めます。</p>
+
+        <h2>8. お問い合わせ</h2>
+        <p>本アプリとこのポリシーに関するお問い合わせは、<a href="https://github.com/akropolises/SlowLyFRESH/issues">GitHub Issues</a>からお願いします。</p>
+      </section>
+
+      <section id="en" lang="en">
+        <h2>Privacy Policy (English)</h2>
+        <p>Last updated: October 25, 2026</p>
+
+        <h3>1. About this policy</h3>
+        <p>This policy explains how the desktop app ゆっくリフレッシュ (SlowLyFRESH, "the App") handles user information.</p>
+
+        <h3>2. Information received from Google</h3>
+        <p>Only when you choose to connect Google Calendar, the App requests only the following two read-only scopes through Google OAuth.</p>
+        <ul>
+          <li><code>https://www.googleapis.com/auth/calendar.calendarlist.readonly</code>: to read the list of your visible calendars</li>
+          <li><code>https://www.googleapis.com/auth/calendar.events.readonly</code>: to read events in those calendars</li>
+        </ul>
+        <p>With these scopes, the App reads the following information.
+        <ul>
+          <li>From your list of visible calendars, the App reads each calendar's ID and name.</li>
+          <li>From today's events, the App reads each event's ID, title, start time, and end time.</li>
+        </ul>
+        <p>The App does not use event descriptions, locations, or attendees. The App never creates, edits, or deletes events in Google Calendar.</p>
+
+        <h3>3. How the information is used</h3>
+        <ul>
+          <li>To show today's events inside the App.</li>
+          <li>To decide when to start a session five minutes before an event.</li>
+        </ul>
+        <p>The information is not used for advertising, analytics, training machine learning models, or any other purpose.</p>
+
+        <h3>4. Storage and sharing</h3>
+        <ul>
+          <li>Events and Google credentials (access and refresh tokens) are stored only on your device.</li>
+          <li>The App has no developer-operated server. Information received from Google is never sent, sold, or shared with the developer or any third party.</li>
+          <li>The App communicates only with Google's servers, for authentication and reading events.</li>
+        </ul>
+        <p>Other data, such as the colors you choose after each session, is also stored only on your device and is not information received from Google.</p>
+
+        <h3>5. Retention and deletion</h3>
+        <ul>
+          <li>Events are replaced with the current day's events at each sync.</li>
+          <li>Choosing "Google連携を解除" (Disconnect Google) in the App revokes the App's access at Google and deletes the stored credentials and Google events from your device.</li>
+          <li>You can also revoke access at any time from <a href="https://myaccount.google.com/connections">Third-party apps &amp; services</a> in your Google Account.</li>
+          <li>Uninstalling the App and deleting its data folder (<code>%APPDATA%\micro-slow</code> on Windows) removes all information stored on your device.</li>
+        </ul>
+
+        <h3>6. Compliance with the Google API Services User Data Policy</h3>
+        <p>The App's use and transfer to any other app of information received from Google APIs will adhere to the <a href="https://developers.google.com/terms/api-services-user-data-policy">Google API Services User Data Policy</a>, including the Limited Use requirements.</p>
+
+        <h3>7. Changes</h3>
+        <p>If this policy changes, this page will be updated along with the "Last updated" date.</p>
+
+        <h3>8. Contact</h3>
+        <p>For questions about the App or this policy, please use <a href="https://github.com/akropolises/SlowLyFRESH/issues">GitHub Issues</a>.</p>
+      </section>
+
+      <footer>
+        <p>&copy; 2026 nae-lab</p>
+      </footer>
+    </main>
+  </body>
+</html>

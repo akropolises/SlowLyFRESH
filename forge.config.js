@@ -14,10 +14,21 @@ module.exports = {
       "^/out($|/)",
       "^/\\.git($|/)",
       "^/SlowTechApp($|/)",
+      "^/docs($|/)",
     ],
   },
   hooks: {
     packageAfterCopy: async (_config, buildPath) => {
+      // 公開配布用(npm run make:public)。個人のconfig.local.jsは使わず、環境変数のClient Secretだけを成果物に書き込む
+      const releaseSecret = process.env.MICRO_SLOW_GOOGLE_CLIENT_SECRET;
+      if (releaseSecret) {
+        fs.writeFileSync(
+          path.join(buildPath, "config.local.js"),
+          `window.MICRO_SLOW_CONFIG.googleClientSecret = ${JSON.stringify(releaseSecret)};\n`
+        );
+        return;
+      }
+
       if (
         process.env.MICRO_SLOW_INCLUDE_LOCAL_CONFIG !== "1" &&
         process.env.SLOW_INDEX_INCLUDE_LOCAL_CONFIG !== "1"

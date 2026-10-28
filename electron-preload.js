@@ -20,6 +20,12 @@ const bridge = {
   clearGoogleAuth() {
     return ipcRenderer.invoke("clear-google-auth");
   },
+  revokeGoogleAuth() {
+    return ipcRenderer.invoke("revoke-google-auth");
+  },
+  openPrivacyPolicy() {
+    return ipcRenderer.invoke("open-privacy-policy");
+  },
   onStartSlow(callback) {
     ipcRenderer.on("electron-start-slow", (_event, proposalId) => {
       callback(proposalId);

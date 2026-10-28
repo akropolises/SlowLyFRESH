@@ -29,6 +29,7 @@
           </div>
           <button class="quiet-button" id="onboardingManualButton" type="button">手入力で始める</button>
           <p class="setup-note hidden" id="onboardingStatus">config.js に Google OAuth Client ID を設定してください</p>
+          <p class="onboarding-note">予定はこの端末の中だけで使い、外部には送りません。<button class="link-button privacy-link" type="button">プライバシーポリシー</button></p>
         </section>
 
         <section class="panel hidden" id="homeView" aria-labelledby="homeTitle">
@@ -61,6 +62,10 @@
           <div class="google-connect hidden" id="googleConnect">
             <p id="googleStatus">Google Calendarを読み込むにはClient IDが必要です。</p>
             <button class="primary-button" id="googleConnectButton" type="button">Google Calendarを読む</button>
+            <div class="google-connect-links">
+              <button class="link-button" id="googleDisconnectButton" type="button">Google連携を解除</button>
+              <button class="link-button privacy-link" type="button">プライバシーポリシー</button>
+            </div>
           </div>
 
           <form class="manual-form hidden" id="manualForm">

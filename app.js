@@ -894,10 +894,38 @@ async function loadGoogleEvents() {
   }
 }
 
+// Google連携を解除する。Google側の許可を取り消し、読み込んだGoogleの予定も端末から消す。
+// Googleのままだと毎時の自動同期がログインを求めてしまうため、手入力に切り替える
+async function disconnectGoogle() {
+  if (!window.confirm("Google連携を解除しますか。読み込んだGoogle Calendarの予定はこの端末から消えます。")) {
+    return;
+  }
+
+  const result = await desktop?.revokeGoogleAuth?.();
+  state.events = state.events.filter((event) => event.source !== "google");
+  writeStoredEvents();
+  const eventIds = new Set(state.events.map((event) => event.id));
+  state.dismissed = new Set([...state.dismissed].filter((id) => eventIds.has(id)));
+  state.deliverDespiteNoSpace = new Set([...state.deliverDespiteNoSpace].filter((id) => eventIds.has(id)));
+  state.startedAutomatically = new Set([...state.startedAutomatically].filter((id) => eventIds.has(id)));
+  googleStatus.textContent = "Google連携を解除しました。";
+  if (result?.revoked === false) {
+    // オフラインなどでGoogle側の取り消しに失敗した場合だけ、利用者に手動での取り消しを案内する
+    window.alert("この端末の連携情報は消しましたが、Google側の許可を取り消せませんでした。Googleアカウントの「サードパーティ製のアプリとサービス」から取り消してください。");
+  }
+  activateSource("manual");
+  syncReminderBackends();
+  renderHome();
+}
+
 document.querySelector("#calendarDay").addEventListener("click", handleProposalAction);
 document.querySelector("#finishSlowButton").addEventListener("click", finishSlow);
 document.querySelector("#reloadButton").addEventListener("click", reloadCurrentSource);
 document.querySelector("#googleConnectButton").addEventListener("click", loadGoogleEvents);
+document.querySelector("#googleDisconnectButton").addEventListener("click", disconnectGoogle);
+document.querySelectorAll(".privacy-link").forEach((button) => {
+  button.addEventListener("click", () => desktop?.openPrivacyPolicy?.());
+});
 document.querySelector("#onboardingGoogleButton").addEventListener("click", loadGoogleEvents);
 document.querySelector("#onboardingManualButton").addEventListener("click", () => {
   completeOnboarding("manual");

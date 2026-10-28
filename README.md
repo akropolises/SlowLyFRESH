@@ -49,7 +49,7 @@ window.MICRO_SLOW_CONFIG.googleClientSecret = "YOUR_DESKTOP_OAUTH_CLIENT_SECRET"
 
 Client SecretはGitにコミットしません。
 
-現在の実装は読み取り専用です。予定の作成・編集は行わず、`calendar.readonly` スコープで当日の予定だけを読み込みます。OAuth tokenはElectronのuserDataディレクトリに保存され、プロジェクトフォルダには保存されません。
+現在の実装は読み取り専用です。予定の作成・編集は行わず、`calendar.calendarlist.readonly`(カレンダー一覧)と `calendar.events.readonly`(予定)の2つの読み取り専用スコープだけを使い、当日の予定を読み込みます。OAuth tokenはElectronのuserDataディレクトリに保存され、プロジェクトフォルダには保存されません。
 
 ## 現在の実装
 
@@ -67,12 +67,14 @@ Client SecretはGitにコミットしません。
 - ウィンドウを閉じても終了せず、非表示化
 - 25種類のMicro Slow体験
 - 直近に出たMicro Slowを避ける提案ロジック
-- 数字カウントに依存しない円形の進行表示
+- 画面の端から寄ってくる霧による、数字に依存しない進行表示
 - 開始前の最大所要時間表示
 - 完了後の色入力と、選択色による記録ギャラリー
 - 日付が変わった場合のキャンバス記録切り替え
 - ギャラリーの月送り範囲を2026年1月から現在月までに制限
 - 色入力後の自動非表示化
+- Google連携の解除(Google側の許可の取り消しを含む)
+- アプリからプライバシーポリシーを開くリンク
 
 ## ファイル構成
 
@@ -83,9 +85,11 @@ Client SecretはGitにコミットしません。
 - `electron-preload.js`: Electron preload bridge
 - `forge.config.js`: Electron ForgeのWindows zipビルド設定
 - `scripts/make-with-local-config.js`: `config.local.js` を成果物にだけ含める検証用ビルドスクリプト
+- `scripts/make-public.js`: 環境変数のClient Secretを成果物にだけ含める公開配布用ビルドスクリプト
+- `docs/`: GitHub Pagesで公開するホームページとプライバシーポリシー(アプリの成果物には含めない)
 - `assets/tray-icon.png`: Trayとウィンドウで使うアプリアイコン
 - `assets/app-icon.ico`: Windowsビルド用アイコン
-- `assets/fonts/`: ゆっくりフレッシュ中と色選択で使うZen Kaku Gothic New(SIL Open Font License、`OFL.txt` を同梱)
+- `assets/fonts/`: ゆっくリフレッシュ中と色選択で使うZen Kaku Gothic New(SIL Open Font License、`OFL.txt` を同梱)
 - `micro-slows.js`: アプリが読み込むMicro Slowデータ
 - `config.js`: 共有用の既定設定
 - `config.example.js`: 個人設定ファイルのひな形
@@ -125,6 +129,15 @@ npm run make:local
 
 この場合も `config.local.js` はGitには入りません。packaging中にだけ成果物へコピーされます。
 
+一般公開する配布物は、個人の `config.local.js` を使わず、環境変数でClient Secretを渡して作ります。
+
+```powershell
+$env:MICRO_SLOW_GOOGLE_CLIENT_SECRET = "YOUR_DESKTOP_OAUTH_CLIENT_SECRET"
+npm run make:public
+```
+
+成果物の中にだけ、Client Secretだけを書いた `config.local.js` が作られます。個人のカレンダーID指定などは入りません。
+
 複数人で開発する場合は、最初に `CONTRIBUTING.md` を確認してください。
 
 ## 配布ターゲット方針
@@ -139,9 +152,24 @@ Android対応はElectronデスクトップ版とはブランチを分けて進�
 
 ## Secretの扱い
 
-Google OAuth Client SecretはGitにコミットしません。ローカルでは `.gitignore` 済みの `config.local.js` にだけ置きます。
+Google OAuth Client SecretはGitにコミットしません。リポジトリは公開されているため、コミットするとGoogleやGitHubの自動検知でSecretが無効化されるおそれがあります。ローカルでは `.gitignore` 済みの `config.local.js` にだけ置きます。
 
-通常のWindows配布物を作る `npm run make` では、`config.local.js` は成果物に含めません。ローカル検証など、Secretを含めたbuildが必要な場合だけ `npm run make:local` を使います。この成果物にはSecretが入るため、公開配布、共有、アップロードには使いません。
+デスクトップアプリのClient Secretは、配布物から取り出せるため、Googleも機密情報としては扱えない前提で設計しています。認証はPKCEで保護しているので、一般公開する配布物にはSecretを含めます。
+
+- `npm run make`: Secretを含めません。Secret必須のOAuth ClientではGoogle Calendarを読み込めません。
+- `npm run make:local`: 個人の `config.local.js` をそのまま含めます。カレンダーIDなど個人の設定も入るため、手元の検証と展示用PCにだけ使い、共有やアップロードには使いません。
+- `npm run make:public`: 環境変数のSecretだけを含めます。一般公開する配布物はこれで作ります。
+
+## 一般公開とGoogleの審査
+
+一般公開するには、Google CloudのOAuth同意画面を「本番」にし、Googleの審査を受けます。`calendar.events.readonly` は機密性の高いスコープのため(`calendar.calendarlist.readonly` は非機密)、審査を通すまでは「確認されていないアプリ」の警告が出て、新規ユーザーは100人までに制限されます。
+
+審査で求められるホームページとプライバシーポリシーは、`docs/` に置いてGitHub Pagesで公開します。
+
+- ホームページ: https://akropolises.github.io/SlowLyFRESH/
+- プライバシーポリシー: https://akropolises.github.io/SlowLyFRESH/privacy.html
+
+GitHubのリポジトリ設定の Pages で、公開元を `main` ブランチの `/docs` フォルダにします。アプリ内のプライバシーポリシーのリンク先は `electron-main.js` の `privacyPolicyUrl` です。データの扱いを変えた場合は、プライバシーポリシーも合わせて更新します。
 
 Android版でも同じ方針を維持します。Secretや個人設定はGit管理対象にせず、Capacitor版で必要になる認証情報の注入方法はAndroidブランチ側のドキュメントに明記します。
 

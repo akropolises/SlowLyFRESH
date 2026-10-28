@@ -517,6 +517,37 @@ main {
   margin-bottom: 0;
 }
 
+.google-connect-links {
+  grid-column: 1 / -1;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+
+/* 連携解除やプライバシーポリシーなど、頻繁には使わない操作は文字だけのボタンにする */
+.link-button {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--muted);
+  font-size: 0.82rem;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.link-button:hover {
+  color: var(--text);
+}
+
+.onboarding-note {
+  margin: 20px 0 0;
+  font-size: 0.82rem;
+}
+
+.onboarding-note .link-button {
+  margin-left: 6px;
+}
+
 .onboarding {
   max-width: 640px;
   margin: 0 auto;

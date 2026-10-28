@@ -7,11 +7,17 @@ const { app, BrowserWindow, ipcMain, Tray, Menu, nativeImage, shell } = require(
 let mainWindow = null;
 let tray = null;
 const reminderTimers = new Map();
-const googleCalendarScope = "https://www.googleapis.com/auth/calendar.readonly";
+// 必要最小限の読み取り権限だけを求める(表示中のカレンダーの一覧と、その予定の読み取り)
+const googleCalendarScopes = [
+  "https://www.googleapis.com/auth/calendar.calendarlist.readonly",
+  "https://www.googleapis.com/auth/calendar.events.readonly",
+];
 const googleAuthUrl = "https://accounts.google.com/o/oauth2/v2/auth";
 const googleTokenUrl = "https://oauth2.googleapis.com/token";
 const googleCalendarEventsUrl = "https://www.googleapis.com/calendar/v3/calendars";
 const googleCalendarListUrl = "https://www.googleapis.com/calendar/v3/users/me/calendarList";
+const googleRevokeUrl = "https://oauth2.googleapis.com/revoke";
+const privacyPolicyUrl = "https://akropolises.github.io/SlowLyFRESH/privacy.html";
 const appIconPath = path.join(__dirname, "assets", "tray-icon.png");
 // PC起動時の自動起動で付ける引数。この引数で起動したときはウィンドウを出さず、トレイに常駐する
 const loginItemArgs = ["--hidden"];
@@ -409,7 +415,7 @@ async function authorizeGoogle(clientId, clientSecret) {
     client_id: clientId,
     redirect_uri: redirectUri,
     response_type: "code",
-    scope: googleCalendarScope,
+    scope: googleCalendarScopes.join(" "),
     access_type: "offline",
     prompt: "consent",
     code_challenge: challenge,
@@ -563,6 +569,32 @@ ipcMain.handle("load-google-events", (_event, config) => {
 ipcMain.handle("clear-google-auth", () => {
   clearStoredTokens();
   return { ok: true };
+});
+
+// 連携解除:Google側の許可も取り消してから、端末に保存したtokenを消す。
+// 取り消しに失敗しても(オフラインなど)端末側のtokenは必ず消し、結果だけrendererに伝える
+ipcMain.handle("revoke-google-auth", async () => {
+  const stored = readStoredTokens();
+  const token = stored?.refresh_token || stored?.access_token;
+  let revoked = !token;
+  if (token) {
+    try {
+      const response = await fetch(googleRevokeUrl, {
+        method: "POST",
+        headers: { "Content-Type": "application/x-www-form-urlencoded" },
+        body: new URLSearchParams({ token }),
+      });
+      revoked = response.ok;
+    } catch {
+      revoked = false;
+    }
+  }
+  clearStoredTokens();
+  return { revoked };
+});
+
+ipcMain.handle("open-privacy-policy", () => {
+  return shell.openExternal(privacyPolicyUrl);
 });
 
 app.whenReady().then(() => {
