@@ -1,0 +1,4 @@
+# Windows batch files need CRLF; the Unix wrapper script needs LF
+*.bat text eol=crlf
+gradlew text eol=lf
+*.jar binary
