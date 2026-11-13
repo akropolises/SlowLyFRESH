@@ -3,15 +3,15 @@
 開発者のスマホに入れて使うための、最小限のAndroidアプリです。Play Storeでの公開は考えていません。
 
 - アプリを起動すると、すぐにゆっくリフレッシュ(Micro Slow)が始まります。直近6回に出たものは避けて選びます
-- 終わるか「ここまでにする」を押すと、色選択になります。色を選ぶと波紋が広がり、アプリが閉じます(色を選ばないまま60秒たったときも閉じます)
+- 終わるか「ここまでにする」を押すと、霧が晴れて画面が静かに消え、アプリが閉じます
 - 戻るボタンでも途中で閉じます。体験中は画面が消えず、通知バーなどは隠れます
-- Googleカレンダー、予定、自動起動、ギャラリーはありません。選んだ色も保存しません
+- Googleカレンダー、予定、自動起動、色選択、ギャラリーはありません
 
 ## しくみ
 
 画面は `web/` のページをWebViewで出しているだけです。デスクトップ版と共通の `styles.css`、`micro-slows.js`、フォント(`assets/fonts/`)は、ビルドのたびにリポジトリのルートから写します。Micro Slowの内容や見た目をデスクトップ版で直せば、次のビルドでAndroid版にも入ります。
 
-- `web/index.html`、`web/mobile.js`、`web/mobile.css`: スマホ版の画面と流れ(霧の進み方と色選択の演出は `app.js` と同じ)
+- `web/index.html`、`web/mobile.js`、`web/mobile.css`: スマホ版の画面と流れ(霧の進み方は `app.js` と同じ)
 - `app/src/main/java/jp/naelab/microslow/MainActivity.java`: WebViewを出し、ページから `MicroSlowAndroid.close()` が呼ばれたらアプリを閉じる
 
 ## ビルド(Windows)

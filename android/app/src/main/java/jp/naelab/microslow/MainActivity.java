@@ -13,7 +13,7 @@ import android.webkit.JavascriptInterface;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
 
-// 画面は android/web/ のページをWebViewで出すだけ。ページが色選択を終えたら close() を呼び、アプリを閉じる
+// 画面は android/web/ のページをWebViewで出すだけ。ページがゆっくリフレッシュを終えたら close() を呼び、アプリを閉じる
 public class MainActivity extends Activity {
     private WebView webView;
 

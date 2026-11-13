@@ -1,33 +1,20 @@
-// スマホ版:起動するとすぐゆっくリフレッシュが始まり、色を選び終えたらアプリを閉じる。
-// 予定やGoogleカレンダーは使わない。霧の進み方・色選択の演出はデスクトップ版(app.js)と同じ
+// スマホ版:起動するとすぐゆっくリフレッシュが始まり、終わったら霧が晴れて画面が消え、アプリを閉じる。
+// 予定やGoogleカレンダー、色選択は使わない。霧の進み方はデスクトップ版(app.js)と同じ
 const microSlows = window.MICRO_SLOWS;
 const recentSlowsKey = "micro-slow-recent-slows";
 const maxSlowDuration = 60;
 const MIST_HOLD_MS = 1600;
-const VIEW_FADE_MS = 320;
-// 色を選ばないまま置かれたときも、この時間で閉じる
-const SENSE_TIMEOUT_MS = 60000;
+// 終わったあと、霧が晴れて文字が消えていくのを見届けてから閉じる
+const END_FADE_MS = 1200;
 
-const senseColorHex = {
-  green: "#6f9f89",
-  gold: "#d7a447",
-  blue: "#668ca8",
-  rose: "#c96f61",
-};
-
-const views = {
-  slow: document.querySelector("#slowView"),
-  transition: document.querySelector("#transitionView"),
-};
+const slowView = document.querySelector("#slowView");
 const rootEl = document.documentElement;
 
 const state = {
-  view: null,
   currentSlow: null,
   timer: null,
-  transitionTimer: null,
   startedAt: 0,
-  senseSelected: false,
+  finished: false,
 };
 
 function readRecentSlowIds() {
@@ -55,32 +42,9 @@ function pickSlow() {
   return pool[Math.floor(Math.random() * pool.length)];
 }
 
-function showView(name, { fadeMs } = {}) {
-  const duration = fadeMs || VIEW_FADE_MS;
-  const current = state.view ? views[state.view] : null;
-  const next = views[name];
-
-  if (current && current !== next) {
-    current.style.transitionDuration = `${duration}ms`;
-    current.classList.add("fade-out");
-    window.setTimeout(() => {
-      current.classList.add("hidden");
-      current.classList.remove("fade-out");
-      current.style.transitionDuration = "";
-    }, duration);
-  }
-
-  next.style.transitionDuration = `${duration}ms`;
-  next.classList.remove("hidden");
-  next.classList.add("fade-out");
-  void next.offsetWidth;
-  requestAnimationFrame(() => {
-    next.classList.remove("fade-out");
-    window.setTimeout(() => {
-      next.style.transitionDuration = "";
-    }, duration);
-  });
-  state.view = name;
+function fadeSlowView(visible, duration) {
+  slowView.style.transitionDuration = `${duration}ms`;
+  slowView.classList.toggle("fade-out", !visible);
 }
 
 function setMist(value, transitionMs) {
@@ -108,9 +72,13 @@ function startSlow() {
   document.querySelector("#slowInstruction").textContent = state.currentSlow.instruction;
   document.querySelector("#slowDuration").textContent = `最大${state.currentSlow.seconds}秒`;
 
+  // 呼吸円を先に見せ、テキストは少し遅れてふわっと出す
   const slowText = document.querySelector("#slowText");
   slowText.classList.remove("visible");
-  showView("slow", { fadeMs: 700 });
+  slowView.classList.remove("hidden");
+  fadeSlowView(false, 0);
+  void slowView.offsetWidth;
+  requestAnimationFrame(() => fadeSlowView(true, 700));
   document.body.classList.add("is-slow");
   centerMistOnBreathCircle();
   window.setTimeout(() => {
@@ -138,50 +106,27 @@ function runProgress() {
   }, 250);
 }
 
-// 霧が晴れていくのに合わせて、色選択の画面がゆっくり現れる
+// 霧が晴れていくのに合わせて文字と呼吸円も消え、消えきったらアプリを閉じる
 function finishSlow() {
-  if (state.view !== "slow") return;
+  if (state.finished) return;
+  state.finished = true;
   window.clearInterval(state.timer);
   window.clearTimeout(state.timer);
   document.body.classList.remove("is-slow");
-  setMist(0, 1200);
-  showView("transition", { fadeMs: 900 });
-  state.transitionTimer = window.setTimeout(closeApp, SENSE_TIMEOUT_MS);
+  setMist(0, END_FADE_MS);
+  fadeSlowView(false, END_FADE_MS);
+  window.setTimeout(closeApp, END_FADE_MS + 200);
 }
 
 function closeApp() {
-  window.clearTimeout(state.transitionTimer);
   // Android側(MainActivity)が用意する橋。ブラウザで開いたときは無いので、そのときは何もしない
   window.MicroSlowAndroid?.close?.();
 }
 
 document.querySelector("#finishSlowButton").addEventListener("click", finishSlow);
 
-document.querySelectorAll(".sense-button").forEach((button) => {
-  button.addEventListener("click", () => {
-    if (state.senseSelected) return;
-    state.senseSelected = true;
-    window.clearTimeout(state.transitionTimer);
-    const colorKey = button.dataset.sense;
-
-    // 選んだ色が画面中央から円状に広がって消え、それを見届けてからアプリを閉じる
-    views.transition.classList.add("is-selecting");
-    const senseRow = document.querySelector(".sense-row");
-    const ripple = document.createElement("span");
-    ripple.className = "sense-ripple";
-    ripple.style.background = senseColorHex[colorKey] || "#999999";
-    const duration = 900 + Math.random() * 500;
-    ripple.style.transitionDuration = `${duration}ms`;
-    senseRow.append(ripple);
-    void ripple.offsetWidth;
-    requestAnimationFrame(() => ripple.classList.add("spread"));
-
-    window.setTimeout(closeApp, duration + 300);
-  });
-});
-
 window.addEventListener("resize", () => {
-  if (state.view === "slow") {
+  if (!state.finished) {
     centerMistOnBreathCircle();
   }
 });

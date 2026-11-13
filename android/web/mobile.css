@@ -21,7 +21,7 @@ main {
   padding: 0;
 }
 
-/* 画面は2つ(ゆっくリフレッシュと色選択)だけなので、どちらも画面いっぱいに重ねて置き、フェードで入れ替える */
+/* 画面はゆっくリフレッシュの1つだけ。画面いっぱいに置き、始まりと終わりはフェードで出し入れする */
 .panel,
 .panel.fade-out {
   position: absolute;
@@ -34,8 +34,7 @@ main {
   box-shadow: none;
 }
 
-#slowView,
-#transitionView {
+#slowView {
   min-height: 0;
 }
 
