@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+    <title>ゆっくリフレッシュ</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="mobile.css">
+  </head>
+  <body>
+    <div class="mist-layer" aria-hidden="true">
+      <span></span>
+      <span></span>
+      <span></span>
+    </div>
+    <div class="app-shell">
+      <main>
+        <section class="panel hidden" id="slowView" aria-labelledby="slowTitle">
+          <div class="slow-stage" id="slowStage">
+            <div class="light-field" aria-hidden="true">
+              <div class="breath-circle"></div>
+            </div>
+            <div class="slow-text" id="slowText">
+              <p class="eyebrow" id="slowDuration">最大60秒</p>
+              <h2 id="slowTitle"></h2>
+              <p class="slow-instruction" id="slowInstruction"></p>
+            </div>
+          </div>
+          <div class="slow-actions">
+            <button class="quiet-button" id="finishSlowButton" type="button">ここまでにする</button>
+          </div>
+        </section>
+
+        <section class="panel hidden" id="transitionView" aria-labelledby="transitionTitle">
+          <p class="sense-prompt" id="transitionTitle">今の気分に近い色を選んでください</p>
+          <div class="sense-row" aria-label="今の感覚に近い色">
+            <button class="sense-button sense-green" data-sense="green" type="button" aria-label="静かな緑"></button>
+            <button class="sense-button sense-gold" data-sense="gold" type="button" aria-label="あたたかい金色"></button>
+            <button class="sense-button sense-blue" data-sense="blue" type="button" aria-label="澄んだ青"></button>
+            <button class="sense-button sense-rose" data-sense="rose" type="button" aria-label="やわらかい赤"></button>
+          </div>
+        </section>
+      </main>
+    </div>
+
+    <script src="micro-slows.js"></script>
+    <script src="mobile.js"></script>
+  </body>
+</html>

@@ -1,0 +1,48 @@
+plugins {
+    id "com.android.application"
+}
+
+// 画面はWebViewで出す。デスクトップ版と共通の styles.css・micro-slows.js・フォントは、ビルドのたびにリポジトリのルートから写す
+def webAssetsDir = layout.buildDirectory.dir("generated/webAssets")
+def repoRoot = rootProject.projectDir.parentFile
+
+def copyWebAssets = tasks.register("copyWebAssets", Sync) {
+    from(new File(rootProject.projectDir, "web"))
+    from(repoRoot) {
+        include "styles.css", "micro-slows.js"
+    }
+    from(new File(repoRoot, "assets/fonts")) {
+        include "*.ttf", "OFL.txt"
+        into "assets/fonts"
+    }
+    into webAssetsDir
+}
+
+android {
+    namespace "jp.naelab.microslow"
+    compileSdk 35
+    buildToolsVersion "35.0.0"
+
+    defaultConfig {
+        applicationId "jp.naelab.microslow"
+        minSdk 26
+        targetSdk 35
+        versionCode 1
+        versionName "0.1.0"
+    }
+
+    sourceSets {
+        main {
+            assets.srcDirs += webAssetsDir
+        }
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
+    }
+}
+
+tasks.named("preBuild") {
+    dependsOn copyWebAssets
+}
