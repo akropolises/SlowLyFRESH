@@ -27,7 +27,7 @@ window.MICRO_SLOWS = [
     id: "feel-sole-pressure",
     title: "足裏の圧を感じる",
     instruction: "床に触れている足裏の、重い場所と軽い場所を感じる。",
-    seconds: 75,
+    seconds: 60,
     senses: ["圧", "重さ"],
     intent: "身体の接地感を通して、緊張を下げる。",
   },
@@ -78,14 +78,6 @@ window.MICRO_SLOWS = [
     seconds: 50,
     senses: ["音", "時間"],
     intent: "次へ急ぐ反応を弱める。",
-  },
-  {
-    id: "hold-warm-object",
-    title: "温かいものを持つ",
-    instruction: "カップや手元の温かいものを持ち、温度の移り方を見る。",
-    seconds: 90,
-    senses: ["温度", "触覚"],
-    intent: "手元の小さな変化に滞在する。",
   },
   {
     id: "watch-shadow-edge",
