@@ -15,6 +15,8 @@ module.exports = {
       "^/\\.git($|/)",
       "^/SlowTechApp($|/)",
       "^/docs($|/)",
+      // Android版のプロジェクト(別ブランチ)とそのビルドの残り
+      "^/android($|/)",
     ],
   },
   hooks: {
